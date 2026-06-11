@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -132,7 +132,7 @@ class CleaningService:
 
         job.result_path = str(result_path)
         job.status = JobStatus.completed
-        job.finished_at = datetime.now(timezone.utc)
+        job.finished_at = datetime.now(UTC)
 
         report = outcome.report
         self._reports.add(Report(job_id=job.id, payload=report.to_dict()))
@@ -150,7 +150,7 @@ class CleaningService:
     def _fail(self, job: CleaningJob, error: str, duration: float) -> CleaningJob:
         job.status = JobStatus.failed
         job.error = error[:2000]
-        job.finished_at = datetime.now(timezone.utc)
+        job.finished_at = datetime.now(UTC)
         self._session.commit()
         logger.error(
             "Cleaning job %s marked failed after %.2fs: %s", job.id, duration, error
@@ -165,18 +165,18 @@ class CleaningService:
         it get a terminal answer instead of waiting forever. Returns the
         number of jobs recovered.
         """
-        cutoff = datetime.now(timezone.utc) - max_age
+        cutoff = datetime.now(UTC) - max_age
         recovered = 0
         for job in self._jobs.list_unfinished():
             created = job.created_at
             if created.tzinfo is None:  # SQLite stores naive UTC timestamps
-                created = created.replace(tzinfo=timezone.utc)
+                created = created.replace(tzinfo=UTC)
             if created > cutoff:
                 continue
             previous = job.status.value
             job.status = JobStatus.failed
             job.error = "Przerwane przez restart serwera. Uruchom czyszczenie ponownie."
-            job.finished_at = datetime.now(timezone.utc)
+            job.finished_at = datetime.now(UTC)
             recovered += 1
             logger.warning(
                 "Recovered stale cleaning job %s (was %s, created %s)",

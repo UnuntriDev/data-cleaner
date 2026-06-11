@@ -1,4 +1,3 @@
-import pandas as pd
 import pytest
 
 from app.cleaning.pipeline import CleaningPipeline

@@ -39,7 +39,7 @@ class ExportService:
         self._settings = settings or get_settings()
         self._jobs = JobRepository(session)
 
-    def _completed_job(self, job_id: int) -> CleaningJob:
+    def _completed_job(self, job_id: int) -> tuple[CleaningJob, Path]:
         """Exports are only valid for jobs that finished successfully."""
         job = self._jobs.get(job_id)
         if job is None:
@@ -49,11 +49,11 @@ class ExportService:
                 f"Cleaning job {job_id} is not completed "
                 f"(status: {job.status.value}); nothing to export"
             )
-        return job
+        return job, Path(job.result_path)
 
     def export(self, job_id: int, request: ExportRequest) -> ExportResult:
-        job = self._completed_job(job_id)
-        df = readers.read_stored(Path(job.result_path))
+        _, result_path = self._completed_job(job_id)
+        df = readers.read_stored(result_path)
 
         if request.format in writers.FILE_FORMATS:
             return self._export_file(job_id, df, request.format)
@@ -72,8 +72,7 @@ class ExportService:
         if fmt not in writers.FILE_FORMATS:
             raise ValidationError(f"Unsupported download format: {fmt}")
 
-        job = self._completed_job(job_id)
-        result_path = Path(job.result_path)
+        _, result_path = self._completed_job(job_id)
         filename = f"cleaned_job_{job_id}{writers.extension_for(fmt)}"
         path = (
             self._settings.export_dir

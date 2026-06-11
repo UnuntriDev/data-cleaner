@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from sqlalchemy import select, update
+from collections.abc import Sequence
+from typing import Any, cast
+
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.orm import Session
 
 from app.db.models import CleaningJob, JobStatus
@@ -30,14 +33,20 @@ class JobRepository:
         The conditional UPDATE means only one caller can win the claim, so two
         workers can never execute the same job.
         """
-        result = self._session.execute(
-            update(CleaningJob)
-            .where(CleaningJob.id == job_id, CleaningJob.status == JobStatus.pending)
-            .values(status=JobStatus.running)
+        result = cast(
+            "CursorResult[Any]",
+            self._session.execute(
+                update(CleaningJob)
+                .where(
+                    CleaningJob.id == job_id, CleaningJob.status == JobStatus.pending
+                )
+                .values(status=JobStatus.running)
+            ),
         )
         return result.rowcount == 1
 
-    def list_unfinished(self) -> list[CleaningJob]:
+    # Sequence (not list) because the `list` method above shadows the builtin.
+    def list_unfinished(self) -> Sequence[CleaningJob]:
         """Jobs still in a non-terminal status (pending or running)."""
         stmt = select(CleaningJob).where(
             CleaningJob.status.in_([JobStatus.pending, JobStatus.running])

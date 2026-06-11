@@ -1,0 +1,26 @@
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# E501: line length handled pragmatically; long strings (log messages, Polish
+#       UI copy) are clearer unwrapped.
+# B008: `File(...)` / `Depends(...)` in argument defaults is the canonical
+#       FastAPI dependency-injection idiom.
+# UP042: the (str, Enum) bases stay — switching to StrEnum changes str()
+#        output ("pending" vs "JobStatus.pending") for values stored in the DB.
+ignore = ["E501", "B008", "UP042"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+no_implicit_optional = true
+
+# Each cleaning operation narrows `execute(df, params)` to its own pydantic
+# ParamsModel — a deliberate registry pattern (the base class validates the
+# payload into that exact model before dispatching), so the LSP override
+# warning does not apply.
+[[tool.mypy.overrides]]
+module = "app.cleaning.operations.*"
+disable_error_code = ["override"]

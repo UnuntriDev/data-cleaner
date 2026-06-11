@@ -4,8 +4,7 @@ import enum
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Enum, ForeignKey, Index, Integer, String
-from sqlalchemy import JSON
+from sqlalchemy import JSON, Enum, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin

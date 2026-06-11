@@ -7,9 +7,9 @@ from typing import Any, BinaryIO
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from app.cleaning.insights import analyze
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
-from app.cleaning.insights import analyze
 from app.core.serialization import dataframe_preview, dataframe_stats
 from app.db.models import Dataset, SourceType
 from app.io import metadata, readers, uploads, writers
