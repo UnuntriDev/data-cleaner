@@ -1,15 +1,58 @@
 # Data Cleaner
 
-A professional web app for data cleaning. Upload a file (CSV / Excel / JSON),
+[![CI](https://github.com/ununtridev/data-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/ununtridev/data-cleaner/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.12+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
+A full-stack web app for data cleaning. Upload a file (CSV / Excel / JSON),
 get an instant preview with quality stats, review automatically detected
 issues (Smart Fix), run a cleaning pipeline as a background job, preview the
 cleaned result and download it (CSV / Excel / JSON).
 
-- **Backend:** Python 3.12+, FastAPI, pandas, SQLAlchemy 2.0, Alembic, Pydantic v2
-- **Frontend:** React + TypeScript (Vite, Tailwind v4, framer-motion)
-- **Database:** SQLite for local dev (default), PostgreSQL via docker compose
+![Landing page](docs/screenshots/landing.png)
+
+## Features
+
+- **Smart Fix** — duplicates, messy column names, stray whitespace, numbers
+  stored as text, high-missing columns and outliers are detected on upload,
+  each with a one-click recommended fix
+- **Async cleaning jobs** — `202 Accepted` + status polling; atomic job
+  claiming, crash recovery on startup, per-job reports with before/after metrics
+- **Parse once, serve many** — preview, stats and insights are computed during
+  upload and cached, so follow-up requests never re-read the file
+- **Production-minded** — streamed uploads with size/extension limits,
+  formula-injection-safe exports, env-driven CORS, request-id tracing,
+  SSRF-gated SQL import
+- **Quality gates** — 49 tests (pytest + vitest), ruff, mypy and a type-checked
+  build wired into GitHub Actions
+
+| Detected issues & data preview | Cleaning result |
+|---|---|
+| ![Workspace](docs/screenshots/workspace.png) | ![Result](docs/screenshots/result.png) |
+
+**Tech stack:** Python 3.12+, FastAPI, pandas, SQLAlchemy 2.0, Alembic,
+Pydantic v2 · React 18 + TypeScript (Vite, Tailwind v4, framer-motion) ·
+SQLite for local dev (default), PostgreSQL via docker compose
 
 ## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Frontend["React SPA"]
+        UI[Upload / Smart Fix UI] -->|poll job status| API
+    end
+    subgraph Backend["FastAPI"]
+        API[Routes] --> SVC[Services]
+        SVC --> REPO[Repositories] --> DB[(SQLite / PostgreSQL)]
+        SVC --> CLEAN["Cleaning layer<br/>(pure pandas: ops, pipeline, insights)"]
+        SVC --> IO["IO layer<br/>(streamed uploads, sidecar cache, writers)"]
+        IO --> FS[(File storage)]
+        API -. BackgroundTasks .-> JOB[execute_job] --> SVC
+    end
+```
 
 A clean, strictly layered backend — each layer only depends on the one below it:
 
