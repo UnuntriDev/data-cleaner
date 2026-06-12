@@ -28,10 +28,10 @@ class DatasetService:
         self._repo = DatasetRepository(session)
 
     def import_upload(self, filename: str, source: BinaryIO) -> Dataset:
-        """Stream an uploaded file to disk, parse it once, and register it.
+        """Stream the upload to disk and register it.
 
-        The single parse also feeds the metadata sidecar (preview, stats,
-        insights), so the follow-up endpoints never re-read the file.
+        We parse the file once here and write the sidecar (preview, stats,
+        insights) from the same DataFrame, so later requests don't re-read it.
         """
         source_type = readers.source_type_for_filename(filename)
         path = self._settings.upload_dir / f"{uuid.uuid4().hex}{Path(filename).suffix}"
@@ -39,7 +39,7 @@ class DatasetService:
 
         try:
             df = readers.read_stored(path)
-        except Exception as exc:  # noqa: BLE001 - surface as a controlled 400
+        except Exception as exc:  # noqa: BLE001 - any parse error becomes a 400
             path.unlink(missing_ok=True)
             raise ValidationError(
                 f"Could not parse '{filename}' as {source_type.value}: {exc}"
@@ -62,7 +62,7 @@ class DatasetService:
         return dataset
 
     def import_file(self, filename: str, content: bytes) -> Dataset:
-        """Compatibility wrapper for in-memory payloads (tests, SDK use)."""
+        """Wrapper for in-memory payloads (mostly tests)."""
         import io
 
         return self.import_upload(filename, io.BytesIO(content))
@@ -110,8 +110,8 @@ class DatasetService:
             payload["insights"] = {
                 "issues": [issue.to_dict() for issue in analyze(df)]
             }
-        except Exception:  # noqa: BLE001 - cache is best-effort
-            # The /insights endpoint will compute (and surface errors) live.
+        except Exception:  # noqa: BLE001
+            # not fatal, /insights will just compute it live
             logger.exception("Failed to precompute insights for %s", path.name)
         try:
             metadata.write_meta(path, payload)

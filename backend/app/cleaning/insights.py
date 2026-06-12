@@ -1,11 +1,4 @@
-"""Automatic data-quality detection.
-
-Pure layer: depends only on pandas/numpy. Each detected :class:`Issue`
-carries one or more recommended :class:`Step` objects whose shape is exactly
-the ``{operation, params}`` the cleaning pipeline already consumes. A "fix" is
-therefore just running the existing pipeline with the chosen steps — no changes
-to the core cleaning logic are required.
-"""
+"""Data-quality detection: scan a DataFrame and return fixable issues."""
 
 from __future__ import annotations
 
@@ -16,20 +9,20 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-# A recommended fix is one (or more) standard pipeline steps.
+# a fix is one or more pipeline steps ({operation, params})
 Step = dict[str, Any]
 
-# Thresholds that decide whether something is worth flagging.
-_MISSING_FLAG_PCT = 30.0  # column is "high missing" at/above this share
-_MISSING_DROP_PCT = 60.0  # so empty that dropping the column is reasonable
-_NUMERIC_PARSE_RATIO = 0.9  # share of text values that look numeric
-_MIN_ROWS_FOR_OUTLIERS = 12  # too few rows -> IQR is meaningless
+# detection thresholds
+_MISSING_FLAG_PCT = 30.0  # flag column at this % missing
+_MISSING_DROP_PCT = 60.0  # suggest dropping column at this %
+_NUMERIC_PARSE_RATIO = 0.9  # min share of parseable numeric values
+_MIN_ROWS_FOR_OUTLIERS = 12  # IQR needs at least this many rows
 _CLEAN_NAME = re.compile(r"^[a-z0-9_]+$")
 
 
 @dataclass(frozen=True)
 class Issue:
-    """One detected problem plus its recommended one-click fix."""
+    """One detected problem with a recommended fix."""
 
     code: str
     title: str
@@ -62,7 +55,7 @@ class _Collector:
 
 
 def analyze(df: pd.DataFrame) -> list[Issue]:
-    """Scan a DataFrame and return concrete, fixable quality issues."""
+    """Scan for quality issues and return concrete fixes."""
     out = _Collector()
     if df.empty:
         return []
@@ -76,9 +69,7 @@ def analyze(df: pd.DataFrame) -> list[Issue]:
     return out.issues
 
 
-# --------------------------------------------------------------------------- #
-# Detectors
-# --------------------------------------------------------------------------- #
+# --- detectors ---
 def _detect_duplicates(df: pd.DataFrame, out: _Collector) -> None:
     dupes = int(df.duplicated().sum())
     if dupes == 0:

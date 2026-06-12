@@ -7,7 +7,7 @@ import pandas as pd
 
 
 def dataframe_preview(df: pd.DataFrame, limit: int) -> dict[str, Any]:
-    """Return a JSON-safe preview payload for the first ``limit`` rows."""
+    """First ``limit`` rows as a JSON-safe dict."""
     head = df.head(limit)
     return {
         "columns": [str(c) for c in df.columns],
@@ -18,7 +18,7 @@ def dataframe_preview(df: pd.DataFrame, limit: int) -> dict[str, Any]:
 
 
 def dataframe_stats(df: pd.DataFrame) -> dict[str, Any]:
-    """Compute headline quality stats over the whole DataFrame."""
+    """Headline quality stats for the whole DataFrame."""
     total_cells = int(df.size)
     missing_cells = int(df.isna().sum().sum())
     duplicate_rows = int(df.duplicated().sum())
@@ -34,7 +34,7 @@ def dataframe_stats(df: pd.DataFrame) -> dict[str, Any]:
 
 
 def _records(df: pd.DataFrame) -> list[dict[str, Any]]:
-    # to_dict keeps native python types better after coercing NaN/NaT to None.
+    # coerce NaN/NaT to None before converting to dicts
     cleaned = df.replace({np.nan: None}).where(pd.notna(df), None)
     records: list[dict[str, Any]] = []
     for row in cleaned.to_dict(orient="records"):

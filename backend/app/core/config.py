@@ -15,13 +15,11 @@ class Settings(BaseSettings):
     preview_rows: int = 50
     max_upload_mb: int = 50
 
-    # SQL import lets the caller hand the server an arbitrary DB connection URL
-    # + query to dial out to — a classic SSRF / internal-network access vector
-    # in a hosted deployment. Off by default; opt in only on trusted setups.
+    # SQL import means dialing out to a caller-supplied connection URL, which
+    # is an SSRF vector on a hosted box. Off unless explicitly enabled.
     enable_sql_import: bool = False
 
-    # Comma-separated allowed CORS origins (env: CORS_ORIGINS). Defaults to the
-    # local dev frontend. Never defaults to "*".
+    # comma-separated allowlist (env: CORS_ORIGINS), defaults to local dev
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @property

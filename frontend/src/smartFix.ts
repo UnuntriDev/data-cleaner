@@ -1,9 +1,8 @@
 import type { Insight, OperationStep } from "./types";
 
 /**
- * Execution order for Smart Fix runs. Operations not listed default to 60.
- * `clean_column_names` must run LAST (90): earlier steps reference original
- * column names, so renaming first would break their params.
+ * Execution order. clean_column_names is last (90) because earlier steps
+ * reference original column names.
  */
 export const SMART_FIX_ORDER: Record<string, number> = {
   clean_text: 10,
@@ -14,11 +13,7 @@ export const SMART_FIX_ORDER: Record<string, number> = {
   clean_column_names: 90,
 };
 
-/**
- * Flatten the selected insights into a deduplicated, correctly ordered list
- * of pipeline steps. Two insights recommending the identical step (same
- * operation + params) contribute it once.
- */
+/** Deduplicate and sort selected insights into pipeline steps. */
 export function buildSmartFixSteps(insights: Insight[]): OperationStep[] {
   const deduped = new Map<string, OperationStep>();
 

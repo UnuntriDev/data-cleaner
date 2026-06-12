@@ -20,8 +20,7 @@ router = APIRouter(prefix="/datasets", tags=["datasets"])
 async def upload_dataset(
     service: DatasetServiceDep, file: UploadFile = File(...)
 ) -> DatasetOut:
-    # Hand the spooled file object to the service, which streams it to disk
-    # chunk by chunk — the upload is never held in memory as one blob.
+    # streams to disk in chunks, never buffered fully in memory
     dataset = await run_in_threadpool(
         service.import_upload,
         file.filename or "upload",
@@ -32,10 +31,8 @@ async def upload_dataset(
 
 @router.post("/import-sql", response_model=DatasetOut, status_code=201)
 def import_sql(payload: SqlImportRequest, service: DatasetServiceDep) -> DatasetOut:
-    # SECURITY: this endpoint connects out to a caller-supplied database URL and
-    # runs a caller-supplied query. In a hosted deployment that is an SSRF /
-    # internal-network access vector, so it is disabled unless an operator
-    # explicitly opts in via ENABLE_SQL_IMPORT=true.
+    # SSRF risk: caller-supplied URL + query. Disabled unless
+    # ENABLE_SQL_IMPORT=true is set by the operator.
     if not get_settings().enable_sql_import:
         raise HTTPException(status_code=403, detail="SQL import is disabled")
     dataset = service.import_sql(payload.name, payload.connection_url, payload.query)

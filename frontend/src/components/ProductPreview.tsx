@@ -42,11 +42,7 @@ const ROWS: Row[] = [
   { id: "12", name: "Magdalena Dąbrowska", email: "magda@example.com", amount: "abc", issue: "invalid" },
 ];
 
-/**
- * A static, marketing-only mock of the product: a window-framed dataset with
- * quality stat tiles and a sample table whose cells hint at the kinds of issues
- * the app detects. Carries no real data or behaviour.
- */
+/** Static marketing mock: fake dataset with quality stats and sample rows. */
 export function ProductPreview() {
   return (
     <m.div
@@ -55,7 +51,7 @@ export function ProductPreview() {
       transition={{ type: "spring", stiffness: 150, damping: 22 }}
       className="glass-strong overflow-hidden rounded-3xl shadow-lift ring-1 ring-white/60"
     >
-      {/* Window chrome */}
+      {/* window chrome */}
       <div className="flex items-center gap-3 border-b border-sand-300/60 px-5 py-3.5">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-coral-200" />
@@ -72,14 +68,14 @@ export function ProductPreview() {
         </span>
       </div>
 
-      {/* Quality stats */}
+      {/* stats */}
       <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
         {STATS.map((stat) => (
           <StatTile key={stat.label} {...stat} />
         ))}
       </div>
 
-      {/* Sample table */}
+      {/* table */}
       <div className="px-5 pb-5">
         <div className="overflow-hidden rounded-2xl ring-1 ring-sand-300/60">
           <table className="w-full border-collapse text-left text-sm">

@@ -5,8 +5,8 @@ interface LandingFooterProps {
 }
 
 const LINKS = [
-  { label: "Funkcje", href: "#how-it-works" },
-  { label: "Dokumentacja", href: "#how-it-works" },
+  { label: "Funkcje", href: "#features" },
+  { label: "Dokumentacja", href: "#docs" },
 ];
 
 export function LandingFooter({ onOpenApp }: LandingFooterProps) {

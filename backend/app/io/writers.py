@@ -9,9 +9,7 @@ from sqlalchemy import create_engine
 FILE_FORMATS = {"csv", "excel", "json"}
 _EXTENSIONS = {"csv": ".csv", "excel": ".xlsx", "json": ".json"}
 
-# Leading characters a spreadsheet may interpret as a formula. A text cell
-# beginning with one of these is prefixed with a single quote on export so it
-# is rendered literally instead of executed (CSV/Excel formula injection).
+# chars a spreadsheet treats as the start of a formula (csv/excel injection)
 _FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 
 
@@ -29,10 +27,9 @@ def _escape_cell(value: object) -> object:
 
 
 def escape_formula_injection(df: pd.DataFrame) -> pd.DataFrame:
-    """Return a copy whose text cells are safe to open in a spreadsheet.
+    """Prefix formula-looking text cells with ' so spreadsheets don't run them.
 
-    Only string cells are touched — numeric values such as ``-3`` stay numeric
-    and are never altered.
+    Only touches string cells, numeric -3 stays numeric.
     """
     text_cols = df.select_dtypes(include=["object", "string"]).columns
     if not len(text_cols):
@@ -48,10 +45,9 @@ def write_file(
 ) -> None:
     """Write a DataFrame to disk in the requested format.
 
-    ``escape_formulas`` neutralises CSV/Excel formula injection and should be
-    set when producing a file a user will download/open. It is left off for
-    internal artifacts (e.g. the canonical cleaned result that is re-read for
-    previews and format conversions) so stored data stays pristine.
+    Set escape_formulas for files a user will open in a spreadsheet. Internal
+    artifacts (the stored result csv) are written without it so the data
+    stays as-is.
     """
     if escape_formulas and fmt in {"csv", "excel"}:
         df = escape_formula_injection(df)

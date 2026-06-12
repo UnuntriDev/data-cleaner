@@ -25,12 +25,7 @@ logger = get_logger(__name__)
 
 
 def execute_job(job_id: int) -> None:
-    """Run a pending job in its own session.
-
-    Entry point for FastAPI BackgroundTasks today; the same callable works from
-    a task queue worker (RQ/Celery) because it owns its session and never
-    touches request state.
-    """
+    """Background entry point. Owns its session, so it also works from a queue worker."""
     from app.db.session import SessionLocal
 
     session = SessionLocal()
@@ -55,13 +50,12 @@ class CleaningService:
         return [OperationInfo.model_validate(spec) for spec in registry.describe()]
 
     def create(self, payload: CleaningJobCreate) -> CleaningJob:
-        """Validate the request and persist a pending job — no heavy work here."""
+        """Create a pending job. The actual work happens in run()."""
         dataset = self._datasets.get(payload.dataset_id)
         if dataset is None:
             raise NotFoundError(f"Dataset {payload.dataset_id} not found")
 
-        # Fail fast on unknown operations so the client gets a 400 now instead
-        # of a failed job later.
+        # reject unknown operations here (400) rather than as a failed job
         for step in payload.operations:
             registry.get(step.operation)
 
@@ -82,8 +76,7 @@ class CleaningService:
     def run(self, job_id: int) -> CleaningJob:
         """Execute a pending job: pending -> running -> completed/failed."""
         job = self.get(job_id)
-        # Atomic claim: the conditional UPDATE flips pending -> running only
-        # for one caller, so concurrent workers cannot run the same job twice.
+        # conditional UPDATE, only one caller wins the claim
         if not self._jobs.claim_pending(job_id):
             self._session.rollback()
             self._session.refresh(job)
@@ -116,10 +109,8 @@ class CleaningService:
 
         result_path = self._settings.result_dir / f"job_{job.id}_{uuid.uuid4().hex}.csv"
         writers.write_file(outcome.df, result_path, "csv")
-        # Cache the cleaned preview next to the result so the preview endpoint
-        # does not have to re-parse the file. Best-effort: a cache write
-        # failure must never fail a job whose result and report are intact —
-        # the preview endpoint falls back to reading the CSV.
+        # cache the preview next to the result; best effort, the preview
+        # endpoint falls back to reading the csv anyway
         try:
             metadata.write_meta(
                 result_path,
@@ -158,12 +149,11 @@ class CleaningService:
         return job
 
     def recover_stale_jobs(self, max_age: timedelta = timedelta(0)) -> int:
-        """Fail orphaned pending/running jobs (e.g. after a process restart).
+        """Mark orphaned pending/running jobs as failed after a restart.
 
-        BackgroundTasks do not survive a restart, so any non-terminal job older
-        than ``max_age`` can never finish — mark it failed so clients polling
-        it get a terminal answer instead of waiting forever. Returns the
-        number of jobs recovered.
+        BackgroundTasks die with the process, so anything non-terminal older
+        than max_age will never finish on its own. Returns how many were
+        recovered.
         """
         cutoff = datetime.now(UTC) - max_age
         recovered = 0

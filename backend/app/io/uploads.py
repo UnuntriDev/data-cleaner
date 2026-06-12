@@ -7,11 +7,10 @@ _CHUNK_SIZE = 1024 * 1024  # 1 MiB
 
 
 def stream_to_disk(source: BinaryIO, dest: Path, max_bytes: int) -> int:
-    """Copy an upload to disk in chunks, enforcing a size limit.
+    """Copy an upload to disk chunk by chunk, enforcing the size limit.
 
-    Never holds more than one chunk in memory. On limit breach the partial
-    file is removed and ValueError is raised (mapped to HTTP 400 upstream).
-    Returns the number of bytes written.
+    Raises ValueError (-> 400 upstream) and removes the partial file if the
+    limit is exceeded. Returns bytes written.
     """
     written = 0
     try:

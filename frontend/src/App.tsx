@@ -9,6 +9,7 @@ import { Hero } from "./components/Hero";
 import { HowItWorks } from "./components/HowItWorks";
 import { LandingFooter } from "./components/LandingFooter";
 import { LandingNav } from "./components/LandingNav";
+import { LandingDocs, LandingFeatures } from "./components/LandingSections";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { ProductPreview } from "./components/ProductPreview";
 import {
@@ -43,8 +44,7 @@ const fadeUp = {
   transition: { duration: 0.35, ease },
 };
 
-// A soft, near-critically-damped spring so the upload card glides between its
-// two homes instead of snapping.
+// soft spring for the upload card layout animation
 const uploadLayoutTransition = {
   type: "spring",
   stiffness: 120,
@@ -52,11 +52,8 @@ const uploadLayoutTransition = {
   mass: 1,
 } as const;
 
-// The upload card lives in two spots that share a layoutId: a prominent panel
-// before upload, and the compact header slot after. The destination copy
-// appears instantly at full opacity and animates only its position (the layout
-// spring); the source copy is removed without a fade, so a crossfade never
-// reveals the other copy's "empty" state mid-flight.
+// shared layoutId between landing and header; instant opacity so the
+// crossfade never shows the empty state mid-flight
 const uploadDockMotion = {
   initial: { opacity: 1 },
   animate: { opacity: 1 },
@@ -70,9 +67,7 @@ const EMPTY_MANUAL_ENABLED: Record<string, boolean> = Object.fromEntries(
   PRESETS.map((p) => [p.key, false]),
 );
 
-// Workspace-only heavyweights load in their own chunks: the landing page does
-// not pay for the preview table or the result summary. handleUpload preloads
-// both, so by the time they render the chunks are already cached.
+// lazy-loaded so the landing page doesn't pay for workspace components
 const DataPreviewTable = lazy(() =>
   import("./components/DataPreviewTable").then((mod) => ({
     default: mod.DataPreviewTable,
@@ -99,11 +94,8 @@ export default function App() {
   const pendingActionPanelScrollRef = useRef(false);
   const uploadPanelRef = useRef<HTMLElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  // Monotonic tokens guarding async state commits. Each upload bumps both
-  // (a new dataset invalidates in-flight upload AND cleaning work); each
-  // cleaning run bumps its own. Async flows only commit state when the token
-  // they captured is still current, so a stale response can never overwrite
-  // the UI of a newer dataset or job.
+  // stale-request guards: bumped on new upload/cleaning, checked before
+  // committing async results so old responses never overwrite newer state
   const uploadTokenRef = useRef(0);
   const cleaningTokenRef = useRef(0);
   const cleaningInFlightRef = useRef(false);
@@ -255,13 +247,12 @@ export default function App() {
     setEnabled(EMPTY_MANUAL_ENABLED);
     setSmartOpen(true);
     setManualOpen(false);
-    // The invalidated cleaning run skips its own cleanup, so reset its flags
-    // here where the new flow owns them.
+    // reset cleaning flags since the invalidated run won't clean up
     setCleaning(false);
     setCleaningLabels([]);
     resetInsights();
     resetResults();
-    // Warm the lazy workspace chunks while the file uploads.
+    // preload workspace chunks while the upload is in flight
     void import("./components/DataPreviewTable");
     void import("./components/ResultSummary");
     try {
@@ -345,8 +336,7 @@ export default function App() {
     setError(null);
     resetResults();
     try {
-      // Job creation is async on the backend: create, then poll until the
-      // job reaches a terminal status. Success is only shown for "completed".
+      // create, then poll until terminal
       const created = await api.createJob(dataset.id, steps);
       if (!isCurrent()) return;
       const finished = await api.waitForJob(created.id, {
@@ -449,8 +439,7 @@ export default function App() {
     <div className="min-h-screen px-5 pb-10 pt-5 sm:px-8 lg:px-12 lg:pb-12 lg:pt-6">
       <div className="mx-auto max-w-7xl">
         <LayoutGroup id="upload-dock">
-        {/* Top bar — brand + marketing nav (pre-upload) or the docked upload
-            card (after a file loads) */}
+        {/* Top bar */}
         <m.header
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -519,11 +508,7 @@ export default function App() {
 
         <AnimatePresence mode="wait">
           {!dataset ? (
-            /* Pre-upload landing — hero + dominant upload area beside a product
-               preview, with a "how it works" section below. The upload card
-               carries the shared layoutId so it flies up to the header slot once
-               a file is loaded; its exit is instant (see uploadDockMotion) so no
-               ghost lingers during the morph. */
+            /* Landing page */
             <m.div
               key="welcome"
               initial={{ opacity: 0 }}
@@ -532,16 +517,14 @@ export default function App() {
               className="space-y-14 sm:space-y-20"
             >
               <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
-                {/* Left — hero, dominant upload area, trust microcopy */}
+                {/* Left: hero + upload */}
                 <div className="space-y-7">
                   <Hero
                     onUpload={openFilePicker}
                     onHowItWorks={scrollToHowItWorks}
                     onDemo={loadDemo}
                   />
-                  {/* Scroll anchor for "Otwórz aplikację" — kept OUTSIDE the
-                      popLayout child: a ref on that child makes framer's
-                      PopChild read props.ref, which React 18.3 warns about. */}
+                  {/* scroll anchor outside popLayout to avoid React 18.3 ref warning */}
                   <span ref={uploadPanelRef} aria-hidden />
                   <AnimatePresence initial={false} mode="popLayout">
                     {!uploadedFileName && (
@@ -564,16 +547,18 @@ export default function App() {
                   <TrustBadges />
                 </div>
 
-                {/* Right — product preview */}
+                {/* Right: product preview */}
                 <ProductPreview />
               </div>
 
               <HowItWorks onUpload={openFilePicker} onDemo={loadDemo} />
+              <LandingFeatures />
+              <LandingDocs />
               <LandingFooter onOpenApp={scrollToApp} />
             </m.div>
           ) : (
             <m.div {...fadeUp} key="workspace" className="space-y-8">
-              {/* File summary — full-width row above the workspace */}
+              {/* File summary */}
               <AnimatePresence>
                 {stats && (
                   <m.div {...fadeUp} key="summary">
@@ -584,9 +569,9 @@ export default function App() {
                 )}
               </AnimatePresence>
 
-              {/* Workspace — issues (fixed ~350px) + data preview (rest) */}
+              {/* Workspace: issues sidebar + data preview */}
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-[350px_minmax(0,1fr)] lg:items-start">
-                {/* Left — detected issues + manual mode */}
+                {/* Left: issues + manual mode */}
                 <div className="space-y-6">
                   <section>
                     <div className="mb-3 flex items-center justify-between gap-3">
@@ -723,7 +708,7 @@ export default function App() {
                   </section>
                 </div>
 
-                {/* Right — action panel + data preview (the workspace focus) */}
+                {/* Right: action panel + data preview */}
                 <div ref={actionPanelRef} className="space-y-6 scroll-mt-6">
                   <div className="lg:sticky lg:top-6 lg:z-20">
                     <AnimatePresence mode="wait">
@@ -803,4 +788,3 @@ function Panel({
     </section>
   );
 }
-

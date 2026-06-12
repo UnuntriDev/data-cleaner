@@ -39,8 +39,7 @@ function buildMetrics(s: DatasetStats): Metric[] {
       tone: "neutral",
     },
     {
-      // Headline shows the share of missing cells (e.g. "9,3%"); the
-      // description carries the absolute counts for context.
+      // percentage as headline, absolute counts in the description
       label: "Braki danych",
       value: s.missing_pct,
       format: formatPct,

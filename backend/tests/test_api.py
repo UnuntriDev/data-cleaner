@@ -1,8 +1,5 @@
-"""End-to-end API tests: upload, async job lifecycle, exports.
-
-TestClient executes FastAPI background tasks synchronously after each
-response, so a job created via POST is already terminal on the next GET.
-"""
+"""API tests. TestClient runs background tasks synchronously, so jobs
+created via POST are already terminal by the next GET."""
 from __future__ import annotations
 
 import io
@@ -110,7 +107,7 @@ def test_job_lifecycle_completes_and_exports(client: TestClient) -> None:
     job = created.json()
     assert job["status"] == "pending"
 
-    # TestClient ran the background task already; the job must be terminal.
+    # background task already ran; job should be terminal
     polled = client.get(f"/cleaning/jobs/{job['id']}").json()
     assert polled["status"] == "completed"
     assert polled["error"] is None
@@ -198,7 +195,7 @@ def test_recover_stale_jobs_fails_orphans(client: TestClient) -> None:
         status, error = _job_status(job_id)
         assert status == "failed"
         assert "restart" in (error or "").lower()
-    # A job younger than max_age is left for the worker to pick up.
+    # fresh job should be left alone
     status, _ = _job_status(fresh_pending)
     assert status == "pending"
 
@@ -218,7 +215,7 @@ def test_run_skips_non_pending_jobs_and_never_duplicates_reports(
     assert _job_status(job_id)[0] == "completed"
     assert _report_count(job_id) == 1
 
-    # A duplicate run call (e.g. a second worker) must not re-execute the job.
+    # duplicate run must not re-execute
     session = SessionLocal()
     try:
         job = CleaningService(session).run(job_id)
@@ -227,7 +224,7 @@ def test_run_skips_non_pending_jobs_and_never_duplicates_reports(
         session.close()
     assert _report_count(job_id) == 1
 
-    # A job already claimed by another worker is skipped as well.
+    # job claimed by another worker is skipped
     contested = _add_job(dataset_id, JobStatus.pending)
     claimer = SessionLocal()
     try:
@@ -266,7 +263,7 @@ def test_sidecar_write_failure_does_not_fail_job(
     status, error = _job_status(job_id)
     assert status == "completed"
     assert error is None
-    # Preview falls back to reading the cleaned CSV when the cache is absent.
+    # preview falls back to reading the CSV when cache is missing
     preview = client.get(f"/cleaning/jobs/{job_id}/preview")
     assert preview.status_code == 200
     assert preview.json()["total_rows"] == 3
@@ -275,7 +272,7 @@ def test_sidecar_write_failure_does_not_fail_job(
 def test_cached_endpoints_survive_reader_failure(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Proves preview/stats/insights come from the sidecar, not a re-read."""
+    """Cached endpoints don't re-read the data file."""
     dataset_id = _upload(client).json()["id"]
 
     def boom(*_args, **_kwargs):
@@ -323,7 +320,7 @@ def test_escape_formula_injection_unit() -> None:
         "'\rx",
         "ok",
     ]
-    # Numeric values are never touched.
+    # numbers stay as-is
     assert out["number"].tolist() == [-5, -5, -5, -5, -5, -5, -5]
 
 
@@ -393,12 +390,12 @@ def test_sql_import_round_trip_when_enabled(client: TestClient) -> None:
 
 
 def test_request_id_is_generated_and_echoed(client: TestClient) -> None:
-    # Generated when absent.
+    # generated when absent
     res = client.get("/health")
     generated = res.headers.get("X-Request-ID")
     assert generated and len(generated) >= 16
 
-    # Reused when supplied by the caller.
+    # reused when supplied
     res = client.get("/health", headers={"X-Request-ID": "trace-abc-123"})
     assert res.headers["X-Request-ID"] == "trace-abc-123"
 

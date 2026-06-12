@@ -5,9 +5,9 @@ import { ArrowRight, FileIcon, UploadCloud } from "./icons";
 interface HeroProps {
   /** Opens the file picker. */
   onUpload: () => void;
-  /** Smooth-scrolls to the "Jak to działa" section. */
+  /** Scrolls to "Jak to działa". */
   onHowItWorks: () => void;
-  /** Loads the built-in sample file through the normal upload flow. */
+  /** Loads the demo CSV. */
   onDemo: () => void;
 }
 
@@ -18,10 +18,7 @@ const rise = (delay: number) => ({
   transition: { duration: 0.45, ease, delay },
 });
 
-/**
- * Landing hero: headline, supporting copy and the primary calls to action.
- * Presentational — all behaviour is passed in.
- */
+/** Landing hero with headline and CTAs. */
 export function Hero({ onUpload, onHowItWorks, onDemo }: HeroProps) {
   return (
     <div className="max-w-xl">

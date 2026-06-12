@@ -1,19 +1,16 @@
 import { m } from "framer-motion";
 
 interface LandingNavProps {
-  /** Moves the user into the main app workspace. */
+  /** Scroll to / open the workspace. */
   onStart: () => void;
 }
 
 const LINKS = [
-  { label: "Funkcje", href: "#how-it-works" },
-  { label: "Dokumentacja", href: "#how-it-works" },
+  { label: "Funkcje", href: "#features" },
+  { label: "Dokumentacja", href: "#docs" },
 ];
 
-/**
- * Marketing top-nav shown before a file is uploaded. Links collapse on small
- * screens so only the brand and CTA remain.
- */
+/** Top nav for the landing page. Links hidden on mobile. */
 export function LandingNav({ onStart }: LandingNavProps) {
   return (
     <nav className="flex items-center gap-2 sm:gap-5">

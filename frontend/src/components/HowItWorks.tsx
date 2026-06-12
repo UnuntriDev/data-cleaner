@@ -34,7 +34,7 @@ const STEPS: Step[] = [
   },
 ];
 
-/** "Jak to działa" section: three numbered steps revealed on scroll. */
+/** Three-step explainer section. */
 export function HowItWorks({ onUpload, onDemo }: HowItWorksProps) {
   return (
     <section id="how-it-works" className="scroll-mt-8">

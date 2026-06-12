@@ -7,10 +7,7 @@ interface FileUploadCardProps {
   onUpload: (file: File) => void;
   busy: boolean;
   fileName: string | null;
-  /**
-   * Optional external ref to the hidden <input>. Lets parent CTAs (hero /
-   * nav buttons) open the picker without duplicating the input.
-   */
+  /** External ref so parent CTAs can open the file picker. */
   inputRef?: RefObject<HTMLInputElement>;
 }
 
@@ -66,8 +63,7 @@ export function FileUploadCard({
         "relative flex cursor-pointer items-center justify-center overflow-hidden transform-gpu",
         "border-2 border-dashed transition-colors duration-200",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-coral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-cream-100",
-        // Compact once a file is loaded (the docked header card); a tall, easy
-        // and visually dominant drop target while empty.
+        // compact when a file is loaded, tall drop target when empty
         fileName
           ? "min-h-0 rounded-2xl p-4 sm:p-4"
           : "min-h-[16rem] rounded-3xl p-8 sm:p-12",

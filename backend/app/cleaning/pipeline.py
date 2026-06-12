@@ -48,7 +48,7 @@ class PipelineReport:
         }
 
     def _summary(self) -> dict[str, Any]:
-        """Aggregate the headline numbers the report section calls out."""
+        """Roll up per-step metadata into totals."""
         removed_duplicates = 0
         handled_missing = 0
         type_conversion_errors = 0
@@ -76,7 +76,7 @@ class PipelineOutcome:
 
 
 class CleaningPipeline:
-    """Runs ONLY the user-selected operations, in order, building a report."""
+    """Runs user-selected operations in order, building a report."""
 
     def __init__(self, op_registry: OperationRegistry = registry) -> None:
         self._registry = op_registry
@@ -110,5 +110,5 @@ class CleaningPipeline:
 
 
 def _quality_counts(df: pd.DataFrame) -> tuple[int, int]:
-    """Return whole-dataset missing-value and duplicate-row counts."""
+    """(missing cells, duplicate rows) for the whole frame."""
     return int(df.isna().sum().sum()), int(df.duplicated().sum())

@@ -3,13 +3,12 @@ from contextvars import ContextVar
 
 _CONFIGURED = False
 
-# Per-request correlation id, set by the request-id middleware and read by the
-# logging filter. Background jobs run outside a request, so it falls back to "-".
+# set by the request-id middleware; "-" outside a request (background jobs)
 request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
 
 
 class _RequestIdFilter(logging.Filter):
-    """Attach the current request id to every log record for the formatter."""
+    """Puts the current request id on every record so the formatter can use it."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         record.request_id = request_id_var.get()

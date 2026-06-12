@@ -22,7 +22,7 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 
 
 def get_session() -> Iterator[Session]:
-    """FastAPI dependency yielding a database session."""
+    """FastAPI dependency: one session per request."""
     session = SessionLocal()
     try:
         yield session

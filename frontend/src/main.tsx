@@ -4,8 +4,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Animation features load in parallel with the first paint; `strict` guards
-// against accidental `motion.*` imports that would re-bundle the full engine.
+// `strict` catches accidental motion.* imports that would re-bundle everything
 const loadMotionFeatures = () =>
   import("./motionFeatures").then((mod) => mod.default);
 

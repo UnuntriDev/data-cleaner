@@ -1,10 +1,4 @@
-/**
- * Built-in sample dataset for local/demo upload flows. It is
- * deliberately messy — untrimmed / mixed-case headers, missing cells, duplicate
- * rows, inconsistent text casing and an invalid number — so the detection and
- * cleaning features have something real to work on. Loaded through the normal
- * upload flow (no special backend path).
- */
+/** Sample CSV with messy data (duplicates, blanks, bad types) for the demo. */
 export const DEMO_FILENAME = "klienci-demo.csv";
 
 export const DEMO_CSV = ` Customer ID , Full Name ,e-mail, City ,Total PLN,Notes

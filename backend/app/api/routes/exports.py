@@ -20,7 +20,7 @@ def export_job(
 def download_job(
     job_id: int, service: ExportServiceDep, format: str = "csv"
 ) -> FileResponse:
-    # FileResponse streams from disk instead of buffering the file in memory.
+    # streams from disk, no in-memory buffering
     download = service.resolve_download(job_id, format)
     return FileResponse(
         download.path,

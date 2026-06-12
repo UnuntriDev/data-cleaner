@@ -18,11 +18,7 @@ function defaultBaseUrl(): string {
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? defaultBaseUrl();
 
-/**
- * Resolve once the document becomes visible (immediately when it already is,
- * or when running outside a browser). Used to pause job polling in background
- * tabs instead of issuing requests nobody is looking at.
- */
+/** Resolves when the tab is visible (or immediately if it already is). */
 function waitUntilVisible(): Promise<void> {
   if (typeof document === "undefined" || !document.hidden) {
     return Promise.resolve();
@@ -93,15 +89,9 @@ export const api = {
   },
 
   /**
-   * Poll a job until the backend reports a terminal status. Job creation is
-   * asynchronous (202), so success may only be shown once this resolves with
-   * status === "completed". `shouldStop` lets the caller abandon a poll that
-   * is no longer relevant (e.g. the user uploaded a new file); the last seen
-   * job is returned and the caller's stale-guard discards it.
-   *
-   * The interval backs off exponentially (intervalMs -> maxIntervalMs) so
-   * long jobs do not hammer the API, and polling pauses while the tab is
-   * hidden — hidden time does not consume the timeout budget.
+   * Poll until the job reaches a terminal status. Backs off exponentially
+   * and pauses while the tab is hidden. `shouldStop` lets callers bail
+   * when the poll is no longer relevant.
    */
   async waitForJob(
     id: number,

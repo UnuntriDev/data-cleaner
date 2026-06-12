@@ -21,10 +21,9 @@ configure_logging(settings.log_level)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # BackgroundTasks die with the process; without this, jobs interrupted by
-    # a restart would stay pending/running forever and clients would poll them
-    # indefinitely. Best-effort: a failure here (e.g. migrations not applied
-    # yet) must not prevent the API from starting.
+    # jobs interrupted by a restart would stay pending/running forever, so
+    # fail them at startup; if this itself fails (no migrations yet) the API
+    # should still come up
     from app.core.logging import get_logger
     from app.db.session import SessionLocal
 

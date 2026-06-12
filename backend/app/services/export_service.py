@@ -25,7 +25,7 @@ _MEDIA_TYPES = {
 
 @dataclass(frozen=True)
 class DownloadFile:
-    """A cleaned result available on disk, ready to stream with FileResponse."""
+    """File on disk ready to hand to FileResponse."""
 
     path: Path
     filename: str
@@ -40,7 +40,7 @@ class ExportService:
         self._jobs = JobRepository(session)
 
     def _completed_job(self, job_id: int) -> tuple[CleaningJob, Path]:
-        """Exports are only valid for jobs that finished successfully."""
+        """Only completed jobs can be exported."""
         job = self._jobs.get(job_id)
         if job is None:
             raise NotFoundError(f"Cleaning job {job_id} not found")
@@ -62,12 +62,10 @@ class ExportService:
         raise ValidationError(f"Unsupported export format: {request.format}")
 
     def resolve_download(self, job_id: int, fmt: str) -> DownloadFile:
-        """Materialise a downloadable copy of a completed result on disk.
+        """Build (or reuse) a downloadable copy of the result.
 
-        The download is built once into the export dir (formula-escaped for
-        CSV/Excel) and reused while the canonical result is unchanged. The
-        canonical result CSV itself is left pristine so previews and format
-        conversions keep reading the real values.
+        Downloads get formula escaping, the stored result csv stays untouched
+        so previews and conversions keep reading real values.
         """
         if fmt not in writers.FILE_FORMATS:
             raise ValidationError(f"Unsupported download format: {fmt}")

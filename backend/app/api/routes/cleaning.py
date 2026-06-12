@@ -21,7 +21,7 @@ def create_job(
     service: CleaningServiceDep,
     background_tasks: BackgroundTasks,
 ) -> CleaningJobOut:
-    """Create the job quickly; the cleaning itself runs after the response."""
+    """Create the job; cleaning runs in a background task."""
     job = service.create(payload)
     background_tasks.add_task(execute_job, job.id)
     return CleaningJobOut.model_validate(job)

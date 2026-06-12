@@ -28,11 +28,7 @@ class JobRepository:
         return list(self._session.scalars(stmt))
 
     def claim_pending(self, job_id: int) -> bool:
-        """Atomically move a job from pending to running.
-
-        The conditional UPDATE means only one caller can win the claim, so two
-        workers can never execute the same job.
-        """
+        """Flip pending -> running atomically. Only one caller wins."""
         result = cast(
             "CursorResult[Any]",
             self._session.execute(

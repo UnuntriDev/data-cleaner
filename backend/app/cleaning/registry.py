@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from app.cleaning.base import CleaningOperation
 from app.cleaning.operations import ALL_OPERATIONS
 
-# Map a python annotation type to a frontend-friendly type hint.
+# python type -> frontend-friendly hint
 _TYPE_HINTS = {
     "str": "string",
     "int": "integer",
@@ -33,10 +33,7 @@ class OperationSpec:
 
 
 class OperationRegistry:
-    """Holds every available operation keyed by its registry name.
-
-    Pure: depends only on the cleaning layer, never on schemas or the DB.
-    """
+    """All cleaning operations, keyed by name."""
 
     def __init__(self, operations: list[type[CleaningOperation]]) -> None:
         self._operations: dict[str, CleaningOperation] = {}
@@ -50,7 +47,7 @@ class OperationRegistry:
             raise ValueError(f"Unknown operation: {name}") from exc
 
     def describe(self) -> list[OperationSpec]:
-        """Expose operations + their params so the UI can build forms."""
+        """List operations with their param specs (used by the UI)."""
         specs: list[OperationSpec] = []
         for op in self._operations.values():
             params = [

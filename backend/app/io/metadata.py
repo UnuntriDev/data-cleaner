@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-# Sidecar files live next to the dataset they describe, so they share its
-# lifecycle (copied, inspected, deleted together) without any schema change.
+# sidecars sit next to the data file, so they get copied/deleted together
+# and we don't need a schema change
 _SUFFIX = ".meta.json"
 
 
@@ -14,14 +14,14 @@ def meta_path(data_path: Path) -> Path:
 
 
 def write_meta(data_path: Path, payload: dict[str, Any]) -> None:
-    """Persist JSON metadata (preview/stats/insights) next to a dataset file."""
+    """Write the sidecar json next to a dataset file."""
     meta_path(data_path).write_text(
         json.dumps(payload, ensure_ascii=False, default=str), encoding="utf-8"
     )
 
 
 def read_meta(data_path: Path) -> dict[str, Any] | None:
-    """Load sidecar metadata; None when missing or unreadable (cache miss)."""
+    """Read the sidecar, None on cache miss or unreadable file."""
     path = meta_path(data_path)
     if not path.is_file():
         return None
