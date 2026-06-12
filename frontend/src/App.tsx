@@ -6,7 +6,6 @@ import { CleaningProgress } from "./components/CleaningProgress";
 import { FileStatsCard } from "./components/FileStatsCard";
 import { FileUploadCard } from "./components/FileUploadCard";
 import { Hero } from "./components/Hero";
-import { HowItWorks } from "./components/HowItWorks";
 import { LandingFooter } from "./components/LandingFooter";
 import { LandingNav } from "./components/LandingNav";
 import { LandingFeatures, LandingWorkflow } from "./components/LandingSections";
@@ -148,7 +147,7 @@ export default function App() {
 
   function scrollToHowItWorks() {
     document
-      .getElementById("how-it-works")
+      .getElementById("workflow")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -514,7 +513,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: { duration: 0 } }}
-              className="space-y-14 sm:space-y-20"
+              className="space-y-24 sm:space-y-32"
             >
               <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
                 {/* Left: hero + upload */}
@@ -551,9 +550,8 @@ export default function App() {
                 <ProductPreview />
               </div>
 
-              <HowItWorks onUpload={openFilePicker} onDemo={loadDemo} />
+              <LandingWorkflow onUpload={openFilePicker} onDemo={loadDemo} />
               <LandingFeatures />
-              <LandingWorkflow />
               <LandingFooter onOpenApp={scrollToApp} />
             </m.div>
           ) : (

@@ -33,7 +33,7 @@ export function LandingNav({ onStart }: LandingNavProps) {
         whileHover={{ scale: 1.03, y: -1 }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 420, damping: 26 }}
-        className="sheen inline-flex items-center rounded-full bg-gradient-to-br from-coral-500 to-coral-600 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition-colors duration-200 hover:to-coral-700"
+        className="glass-strong inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold text-ink-700 ring-1 ring-sand-300 transition-colors duration-200 hover:text-coral-700 hover:ring-coral-300"
       >
         Otwórz aplikację
       </m.button>
