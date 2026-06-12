@@ -9,7 +9,7 @@ import { Hero } from "./components/Hero";
 import { HowItWorks } from "./components/HowItWorks";
 import { LandingFooter } from "./components/LandingFooter";
 import { LandingNav } from "./components/LandingNav";
-import { LandingDocs, LandingFeatures } from "./components/LandingSections";
+import { LandingFeatures, LandingWorkflow } from "./components/LandingSections";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { ProductPreview } from "./components/ProductPreview";
 import {
@@ -553,7 +553,7 @@ export default function App() {
 
               <HowItWorks onUpload={openFilePicker} onDemo={loadDemo} />
               <LandingFeatures />
-              <LandingDocs />
+              <LandingWorkflow />
               <LandingFooter onOpenApp={scrollToApp} />
             </m.div>
           ) : (

@@ -1,13 +1,12 @@
 import { m } from "framer-motion";
 import type { ComponentType, SVGProps } from "react";
 import {
-  Bolt,
-  Check,
-  Columns,
+  Alert,
   Database,
   Download,
+  Rows,
   Search,
-  Shield,
+  UploadCloud,
   Wand,
 } from "./icons";
 
@@ -19,9 +18,10 @@ interface Feature {
   text: string;
 }
 
-interface DocItem {
+interface WorkflowStep {
+  icon: Icon;
   title: string;
-  items: string[];
+  text: string;
 }
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -49,34 +49,38 @@ const FEATURES: Feature[] = [
   },
 ];
 
-const DOCS: DocItem[] = [
+const WORKFLOW: WorkflowStep[] = [
   {
-    title: "Obsługiwane pliki",
-    items: [
-      "CSV, Excel oraz JSON.",
-      "Maksymalny rozmiar pliku: 50 MB.",
-      "Podgląd pokazuje próbkę danych i podstawowe statystyki jakości.",
-    ],
+    icon: UploadCloud,
+    title: "Wgraj plik",
+    text: "CSV, XLSX lub JSON do 50 MB.",
   },
   {
-    title: "Czyszczenie danych",
-    items: [
-      "Sugestie Smart Fix bazują na wykrytych problemach w pliku.",
-      "Tryb ręczny pozwala wybrać konkretne operacje.",
-      "Ten sam plik można naprawić raz w ramach bieżącego workflow.",
-    ],
+    icon: Search,
+    title: "Analiza jakości",
+    text: "Podgląd danych i statystyki jakości.",
   },
   {
-    title: "Eksport i przechowywanie",
-    items: [
-      "Eksport jest dostępny dopiero po udanym czyszczeniu.",
-      "Pliki są obsługiwane tymczasowo po stronie serwera.",
-      "Wynik można pobrać jako CSV, XLSX albo JSON.",
-    ],
+    icon: Alert,
+    title: "Wykrywanie problemów",
+    text: "Duplikaty, braki, błędne wartości.",
+  },
+  {
+    icon: Wand,
+    title: "Smart Fix lub ręcznie",
+    text: "Zaakceptuj sugestie albo wybierz operacje.",
+  },
+  {
+    icon: Rows,
+    title: "Podgląd zmian",
+    text: "Porównaj wynik przed eksportem.",
+  },
+  {
+    icon: Download,
+    title: "Eksport",
+    text: "Pobierz czysty plik CSV, XLSX lub JSON.",
   },
 ];
-
-const DOC_ICONS = [Columns, Shield, Bolt] as const;
 
 export function LandingFeatures() {
   return (
@@ -112,47 +116,58 @@ export function LandingFeatures() {
   );
 }
 
-export function LandingDocs() {
+/** Horizontal timeline of the full cleaning workflow. */
+export function LandingWorkflow() {
   return (
-    <section id="docs" className="scroll-mt-8">
+    <section id="workflow" className="scroll-mt-8">
       <SectionHeading
-        eyebrow="Dokumentacja"
-        title="Podstawy działania aplikacji"
+        eyebrow="Workflow"
+        title="Od surowego pliku do czystych danych"
+        text="Sześć kroków, jeden nieprzerwany proces."
       />
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-3">
-        {DOCS.map((group, i) => {
-          const Icon = DOC_ICONS[i] ?? Check;
-          return (
-            <m.article
-              key={group.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.4, ease, delay: i * 0.07 }}
-              className="glass-strong rounded-3xl p-6 ring-1 ring-white/60"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-coral-100 text-coral-700">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="font-display text-lg font-bold text-ink-900">
-                  {group.title}
-                </h3>
-              </div>
+      <ol className="relative mt-12 grid gap-y-10 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-6 lg:gap-x-0">
+        {/* connecting rail (desktop) */}
+        <m.div
+          aria-hidden
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.9, ease }}
+          className="absolute left-[8.33%] right-[8.33%] top-7 hidden h-px origin-left bg-gradient-to-r from-coral-100 via-coral-300 to-coral-100 lg:block"
+        />
+        {/* connecting rail (mobile) */}
+        <div
+          aria-hidden
+          className="absolute bottom-7 left-7 top-7 w-px bg-gradient-to-b from-coral-100 via-coral-300 to-coral-100 sm:hidden"
+        />
 
-              <ul className="mt-5 space-y-3">
-                {group.items.map((item) => (
-                  <li key={item} className="flex gap-2.5 text-sm text-ink-500">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-coral-600" />
-                    <span className="leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </m.article>
-          );
-        })}
-      </div>
+        {WORKFLOW.map((step, i) => (
+          <m.li
+            key={step.title}
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.4, ease, delay: i * 0.09 }}
+            className="relative flex items-start gap-4 pl-0 sm:flex-col sm:items-center sm:gap-0 sm:text-center lg:px-3"
+          >
+            <span className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-coral-600 shadow-soft ring-1 ring-coral-300/60">
+              <step.icon className="h-6 w-6" />
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-coral-500 to-coral-700 font-display text-[0.65rem] font-bold text-white">
+                {i + 1}
+              </span>
+            </span>
+            <div className="min-w-0 pt-1 sm:pt-4">
+              <h3 className="font-display text-sm font-bold text-ink-900">
+                {step.title}
+              </h3>
+              <p className="mt-1 text-xs leading-relaxed text-ink-500">
+                {step.text}
+              </p>
+            </div>
+          </m.li>
+        ))}
+      </ol>
     </section>
   );
 }

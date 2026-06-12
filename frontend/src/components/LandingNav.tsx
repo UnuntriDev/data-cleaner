@@ -7,7 +7,7 @@ interface LandingNavProps {
 
 const LINKS = [
   { label: "Funkcje", href: "#features" },
-  { label: "Dokumentacja", href: "#docs" },
+  { label: "Workflow", href: "#workflow" },
 ];
 
 /** Top nav for the landing page. Links hidden on mobile. */
