@@ -209,6 +209,18 @@
     }
   }
 
+  /* Slow continuous rotation for the dropzone's conic-gradient border.
+     CSS (compositor) rather than JS so it's cheap and pauses under
+     prefers-reduced-motion via the global rule below. */
+  .animate-spin-slow {
+    animation: spin-slow 10s linear infinite;
+  }
+  @keyframes spin-slow {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .grid-dots {
     background-image: radial-gradient(
       rgba(124, 58, 237, 0.16) 1px,

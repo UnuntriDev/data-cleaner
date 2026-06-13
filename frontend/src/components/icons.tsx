@@ -174,3 +174,21 @@ export function Bolt(props: IconProps) {
     </svg>
   );
 }
+
+/** Classic arrow pointer — filled, for the hero's auto-cursor graphic. */
+export function Pointer(props: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="white"
+      strokeWidth={1.2}
+      strokeLinejoin="round"
+      width={20}
+      height={20}
+      {...props}
+    >
+      <path d="M5 3l5.5 14 2.2-5.6L18 9.3 5 3z" />
+    </svg>
+  );
+}

@@ -24,15 +24,15 @@ export function Hero({ onUpload, onHowItWorks, onDemo }: HeroProps) {
     <div className="max-w-xl">
       <m.h1
         {...rise(0)}
-        className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-balance text-ink-900 sm:text-5xl"
+        className="font-serif text-5xl leading-[1.02] text-balance text-ink-900 sm:text-6xl lg:text-7xl"
       >
         Wyczyść CSV, Excel i JSON przed{" "}
-        <span className="text-gradient">eksportem</span>
+        <span className="text-gradient italic">eksportem</span>
       </m.h1>
 
       <m.p
         {...rise(0.1)}
-        className="mt-4 text-base leading-relaxed text-ink-500 sm:text-lg"
+        className="mt-5 text-base leading-relaxed text-ink-500 sm:text-lg"
       >
         Wgraj CSV, Excel lub JSON, wykryj duplikaty, braki i nieprawidłowe
         pola, a potem pobierz wyczyszczony zestaw danych.

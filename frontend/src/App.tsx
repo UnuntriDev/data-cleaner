@@ -10,7 +10,7 @@ import { LandingFooter } from "./components/LandingFooter";
 import { LandingNav } from "./components/LandingNav";
 import { LandingFeatures, LandingWorkflow } from "./components/LandingSections";
 import { PrimaryButton } from "./components/PrimaryButton";
-import { ProductPreview } from "./components/ProductPreview";
+import { HeroShowcase } from "./components/HeroShowcase";
 import {
   issueKey,
   SmartSuggestions,
@@ -515,9 +515,10 @@ export default function App() {
               exit={{ opacity: 0, transition: { duration: 0 } }}
               className="space-y-24 sm:space-y-32"
             >
-              <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+              <div className="relative grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+                <div className="aurora" />
                 {/* Left: hero + upload */}
-                <div className="space-y-7">
+                <div className="relative z-10 space-y-7">
                   <Hero
                     onUpload={openFilePicker}
                     onHowItWorks={scrollToHowItWorks}
@@ -546,8 +547,10 @@ export default function App() {
                   <TrustBadges />
                 </div>
 
-                {/* Right: product preview */}
-                <ProductPreview />
+                {/* Right: animated before/after showcase */}
+                <div className="relative z-10">
+                  <HeroShowcase />
+                </div>
               </div>
 
               <LandingWorkflow onUpload={openFilePicker} onDemo={loadDemo} />
