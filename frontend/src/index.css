@@ -1,31 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  /* Body / UI — Inter Tight, tight tracking for a modern SaaS feel */
+  --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  /* Headlines — Instrument Serif (single 400 weight; size carries the impact) */
+  --font-serif: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
 
   /* Cool porcelain canvas (token names kept; values reskinned) */
   --color-cream-50: #fbfbfe;
-  --color-cream-100: #f3f4fb;
-  --color-cream-200: #e8eaf6;
-  --color-sand-300: #d6d9ec;
+  --color-cream-100: #f4f3fb;
+  --color-cream-200: #e9e7f6;
+  --color-sand-300: #d8d4ec;
 
-  /* Iris / violet accent */
-  --color-coral-50: #eef0ff;
-  --color-coral-100: #e0e3ff;
-  --color-coral-300: #aeb2f9;
-  --color-coral-500: #5d55e8;
-  --color-coral-600: #4b41d6;
-  --color-coral-700: #3a32ab;
+  /* Primary — violet (token name "coral" kept to avoid churn; 600 = #7C3AED) */
+  --color-coral-50: #f5f3ff;
+  --color-coral-100: #ede9fe;
+  --color-coral-200: #ddd6fe;
+  --color-coral-300: #c4b5fd;
+  --color-coral-400: #a78bfa;
+  --color-coral-500: #8b5cf6;
+  --color-coral-600: #7c3aed;
+  --color-coral-700: #6d28d9;
+  --color-coral-800: #5b21b6;
+
+  /* Accent / success — emerald (states after cleaning, checkmarks) */
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+
+  /* Error — rose (bad values in data) */
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-200: #fecdd3;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
 
   /* Cool slate ink */
   --color-ink-900: #161823;
   --color-ink-700: #383d52;
   --color-ink-500: #6a7088;
   --color-ink-400: #969bb3;
-
-  /* Secondary glow used in gradients */
-  --color-aqua-400: #46d6e0;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.25rem;
@@ -40,14 +59,21 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
+    letter-spacing: -0.01em;
     color: var(--color-ink-900);
     background-color: var(--color-cream-100);
     background-image:
-      radial-gradient(60rem 60rem at 85% -12%, rgba(93, 85, 232, 0.14), transparent 60%),
-      radial-gradient(46rem 46rem at -8% 108%, rgba(70, 214, 224, 0.12), transparent 58%);
+      radial-gradient(50rem 50rem at 88% -10%, rgba(124, 58, 237, 0.1), transparent 60%),
+      radial-gradient(40rem 40rem at -6% 105%, rgba(52, 211, 153, 0.08), transparent 58%);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Headlines opt into the serif; 400 weight is intentional */
+  .font-serif {
+    font-weight: 400;
+    letter-spacing: -0.02em;
   }
 
   ::selection {
@@ -78,13 +104,19 @@
   .shadow-lift {
     box-shadow:
       0 2px 4px rgba(22, 24, 35, 0.06),
-      0 18px 40px rgba(40, 36, 90, 0.12);
+      0 18px 40px rgba(76, 29, 149, 0.12);
   }
 
   .shadow-glow {
     box-shadow:
-      0 10px 30px -8px rgba(93, 85, 232, 0.5),
-      0 4px 12px -4px rgba(93, 85, 232, 0.38);
+      0 10px 30px -8px rgba(124, 58, 237, 0.5),
+      0 4px 12px -4px rgba(124, 58, 237, 0.38);
+  }
+
+  .shadow-glow-emerald {
+    box-shadow:
+      0 10px 30px -8px rgba(16, 185, 129, 0.45),
+      0 4px 12px -4px rgba(16, 185, 129, 0.32);
   }
 
   .text-balance {
@@ -94,13 +126,44 @@
   .text-gradient {
     background-image: linear-gradient(
       120deg,
-      var(--color-coral-600),
+      var(--color-coral-700),
       var(--color-coral-500) 55%,
-      var(--color-aqua-400)
+      var(--color-emerald-400)
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /* Aurora — very soft, blurred radial blobs for section backgrounds.
+     Drop a positioned element with one of these inside a relative section. */
+  .aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .aurora::before,
+  .aurora::after {
+    content: "";
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(72px);
+  }
+  .aurora::before {
+    width: 38rem;
+    height: 38rem;
+    top: -14rem;
+    right: -8rem;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 68%);
+  }
+  .aurora::after {
+    width: 32rem;
+    height: 32rem;
+    bottom: -16rem;
+    left: -10rem;
+    background: radial-gradient(circle, rgba(52, 211, 153, 0.1), transparent 68%);
   }
 
   /* Moving sheen used on the primary CTA */
@@ -148,7 +211,7 @@
 
   .grid-dots {
     background-image: radial-gradient(
-      rgba(93, 85, 232, 0.16) 1px,
+      rgba(124, 58, 237, 0.16) 1px,
       transparent 1px
     );
     background-size: 22px 22px;
@@ -162,6 +225,7 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
