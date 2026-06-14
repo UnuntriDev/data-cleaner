@@ -1,6 +1,7 @@
 import { m } from "framer-motion";
 import { useMemo, useState } from "react";
 import type { DataPreview } from "../types";
+import { useScrollAffordance } from "../hooks/useScrollAffordance";
 import { Columns, Rows, Search } from "./icons";
 
 interface DataPreviewTableProps {
@@ -107,7 +108,11 @@ export function DataPreviewTable({
     for (const row of rows) {
       const duplicateRow = duplicateRows.has(rowKey(row, columns));
       for (const column of columns) {
-        const issue = classifyCell(column, renderCell(row[column]), duplicateRow);
+        const issue = classifyCell(
+          column,
+          renderCell(row[column]),
+          duplicateRow,
+        );
         if (issue) counts[issue] += 1;
       }
     }
@@ -116,6 +121,11 @@ export function DataPreviewTable({
   }, [columns, duplicateRows, rows, showQualityHints]);
 
   const accent = tone === "clean" ? "text-emerald-600" : "text-coral-500";
+
+  const { ref: scrollRef, affordance } = useScrollAffordance<HTMLDivElement>([
+    columns.length,
+    filtered.length,
+  ]);
 
   return (
     <div className="glass-strong overflow-hidden rounded-2xl shadow-lift ring-1 ring-white/60">
@@ -145,74 +155,99 @@ export function DataPreviewTable({
       </div>
 
       {/* Table */}
-      <div className="scroll-soft min-h-[29rem] max-h-[34rem] overflow-auto">
-        <table className="w-full border-collapse text-left text-sm">
-          <thead className="sticky top-0 z-10">
-            <tr className="bg-cream-200/95 backdrop-blur">
-              {columns.map((c) => (
-                <th
-                  key={c}
-                  className="whitespace-nowrap px-4 py-3 font-semibold text-ink-700"
-                >
-                  {c}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((row, i) => {
-              const duplicateRow =
-                showQualityHints && duplicateRows.has(rowKey(row, columns));
-              return (
-              <m.tr
-                key={i}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i * 0.012, 0.35), duration: 0.25 }}
-                className={[
-                  "border-t border-sand-300/50 odd:bg-white/30 hover:bg-coral-50/60",
-                  duplicateRow ? "bg-coral-50/25" : "",
-                ].join(" ")}
-              >
-                {columns.map((c) => {
-                  const value = renderCell(row[c]);
-                  const empty = value === "—";
-                  const issue = showQualityHints
-                    ? classifyCell(c, value, duplicateRow)
-                    : null;
-                  return (
-                    <td
-                      key={c}
-                      className={[
-                        "whitespace-nowrap px-4 py-3.5 tabular-nums",
-                        issue
-                          ? issueClasses[issue]
-                          : empty
-                            ? "italic text-ink-400"
-                            : "text-ink-700",
-                      ].join(" ")}
-                    >
-                      {value}
-                    </td>
-                  );
-                })}
-              </m.tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td
-                  colSpan={Math.max(columns.length, 1)}
-                  className="px-4 py-24 text-center text-sm text-ink-400"
-                >
-                  {query
-                    ? `Brak wyników dla "${query}"`
-                    : "Brak wierszy do wyświetlenia"}
-                </td>
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="scroll-soft min-h-[29rem] max-h-[34rem] overflow-auto"
+        >
+          <table className="w-full border-collapse text-left text-sm">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-cream-200/95 backdrop-blur">
+                {columns.map((c) => (
+                  <th
+                    key={c}
+                    className="whitespace-nowrap px-4 py-3 font-semibold text-ink-700"
+                  >
+                    {c}
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((row, i) => {
+                const duplicateRow =
+                  showQualityHints && duplicateRows.has(rowKey(row, columns));
+                return (
+                  <m.tr
+                    key={i}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: Math.min(i * 0.012, 0.35),
+                      duration: 0.25,
+                    }}
+                    className={[
+                      "border-t border-sand-300/50 odd:bg-white/30 hover:bg-coral-50/60",
+                      duplicateRow ? "bg-coral-50/25" : "",
+                    ].join(" ")}
+                  >
+                    {columns.map((c) => {
+                      const value = renderCell(row[c]);
+                      const empty = value === "—";
+                      const issue = showQualityHints
+                        ? classifyCell(c, value, duplicateRow)
+                        : null;
+                      return (
+                        <td
+                          key={c}
+                          className={[
+                            "whitespace-nowrap px-4 py-3.5 tabular-nums",
+                            issue
+                              ? issueClasses[issue]
+                              : empty
+                                ? "italic text-ink-400"
+                                : "text-ink-700",
+                          ].join(" ")}
+                        >
+                          {value}
+                        </td>
+                      );
+                    })}
+                  </m.tr>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={Math.max(columns.length, 1)}
+                    className="px-4 py-24 text-center text-sm text-ink-400"
+                  >
+                    {query
+                      ? `Brak wyników dla "${query}"`
+                      : "Brak wierszy do wyświetlenia"}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Edge fades — only visible when there's hidden content that way.
+            pointer-events-none so they never block scrolling or clicks. */}
+        <div
+          aria-hidden
+          className={[
+            "pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-cream-100 to-transparent transition-opacity duration-200",
+            affordance.canScrollLeft ? "opacity-100" : "opacity-0",
+          ].join(" ")}
+        />
+        <div
+          aria-hidden
+          className={[
+            "pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-cream-100 to-transparent transition-opacity duration-200",
+            affordance.canScrollRight ? "opacity-100" : "opacity-0",
+          ].join(" ")}
+        />
       </div>
 
       {/* Footer */}
@@ -223,7 +258,11 @@ export function DataPreviewTable({
         </span>
         {showQualityHints && (
           <span className="flex flex-wrap gap-1.5">
-            <IssueBadge label="Braki" value={qualityCounts.empty} tone="empty" />
+            <IssueBadge
+              label="Braki"
+              value={qualityCounts.empty}
+              tone="empty"
+            />
             <IssueBadge
               label="Duplikaty"
               value={qualityCounts.duplicate}
