@@ -543,18 +543,6 @@ export default function App() {
                       </m.div>
                     )}
                   </AnimatePresence>
-                  {!uploadedFileName && (
-                    <p className="text-center text-sm text-ink-400">
-                      lub{" "}
-                      <button
-                        type="button"
-                        onClick={loadDemo}
-                        className="text-coral-600 underline underline-offset-2 transition-colors hover:text-coral-700"
-                      >
-                        wczytaj przykładowe dane
-                      </button>
-                    </p>
-                  )}
                   <TrustBadges />
                 </div>
 
