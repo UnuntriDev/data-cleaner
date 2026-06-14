@@ -194,6 +194,16 @@ export function LandingFeatures() {
               title="Podgląd przed i po"
               text="Porównaj wynik i podsumowanie zmian przed eksportem."
             />
+            <div className="mt-4 overflow-hidden rounded-xl bg-white/55 text-xs ring-1 ring-sand-300/40">
+              <div className="flex items-center gap-2 border-b border-sand-300/40 bg-rose-50/70 px-3 py-1.5 font-mono text-rose-600">
+                <span className="font-bold select-none">−</span>
+                <span>kwota: <span className="font-semibold">abc</span></span>
+              </div>
+              <div className="flex items-center gap-2 bg-emerald-50/70 px-3 py-1.5 font-mono text-emerald-700">
+                <span className="font-bold select-none">+</span>
+                <span>kwota: <span className="font-semibold">1 200</span></span>
+              </div>
+            </div>
           </BentoTile>
 
           <BentoTile delay={0.18}>
@@ -202,6 +212,16 @@ export function LandingFeatures() {
               title="Eksport CSV/XLSX/JSON"
               text="Pobierz czysty plik w wybranym formacie."
             />
+            <div className="mt-4 flex gap-2">
+              {["CSV", "XLSX", "JSON"].map((fmt) => (
+                <span
+                  key={fmt}
+                  className="rounded-lg bg-coral-50 px-2.5 py-1 text-xs font-semibold text-coral-700 ring-1 ring-coral-100"
+                >
+                  {fmt}
+                </span>
+              ))}
+            </div>
           </BentoTile>
         </div>
       </div>
@@ -278,7 +298,7 @@ function SectionHeading({
       <p className="inline-flex items-center rounded-full bg-white/70 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-coral-700 shadow-soft ring-1 ring-coral-300/50">
         {eyebrow}
       </p>
-      <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">
+      <h2 className="mt-3 font-serif text-3xl tracking-tight text-ink-900 sm:text-4xl">
         {title}
       </h2>
       {text && (

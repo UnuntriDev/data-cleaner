@@ -1,14 +1,10 @@
 import { m } from "framer-motion";
 import { PrimaryButton } from "./PrimaryButton";
-import { ArrowRight, FileIcon, UploadCloud } from "./icons";
+import { ArrowRight, UploadCloud } from "./icons";
 
 interface HeroProps {
-  /** Opens the file picker. */
   onUpload: () => void;
-  /** Scrolls to "Jak to działa". */
   onHowItWorks: () => void;
-  /** Loads the demo CSV. */
-  onDemo: () => void;
 }
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -18,8 +14,7 @@ const rise = (delay: number) => ({
   transition: { duration: 0.45, ease, delay },
 });
 
-/** Landing hero with headline and CTAs. */
-export function Hero({ onUpload, onHowItWorks, onDemo }: HeroProps) {
+export function Hero({ onUpload, onHowItWorks }: HeroProps) {
   return (
     <div className="max-w-xl">
       <m.h1
@@ -51,13 +46,6 @@ export function Hero({ onUpload, onHowItWorks, onDemo }: HeroProps) {
           icon={<ArrowRight className="h-4 w-4" />}
         >
           Jak to działa
-        </PrimaryButton>
-        <PrimaryButton
-          variant="ghost"
-          onClick={onDemo}
-          icon={<FileIcon className="h-4 w-4" />}
-        >
-          Wczytaj przykład
         </PrimaryButton>
       </m.div>
     </div>
