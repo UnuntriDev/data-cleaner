@@ -11,14 +11,14 @@ import type {
 
 function defaultBaseUrl(): string {
   if (typeof window === "undefined") return "http://localhost:8000";
-  const hostname =
-    window.location.hostname === "127.0.0.1" ? "127.0.0.1" : "localhost";
-  return `${window.location.protocol}//${hostname}:8000`;
+  // Reuse whatever host the app is served from (localhost, 127.0.0.1, or a
+  // LAN IP) so the API resolves correctly when accessed from another device.
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:8000`;
 }
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? defaultBaseUrl();
 
-/** Resolves when the tab is visible (or immediately if it already is). */
 function waitUntilVisible(): Promise<void> {
   if (typeof document === "undefined" || !document.hidden) {
     return Promise.resolve();
@@ -88,11 +88,8 @@ export const api = {
     return request<CleaningJob>(`/cleaning/jobs/${id}`);
   },
 
-  /**
-   * Poll until the job reaches a terminal status. Backs off exponentially
-   * and pauses while the tab is hidden. `shouldStop` lets callers bail
-   * when the poll is no longer relevant.
-   */
+  // shouldStop pozwala wywołującemu przerwać polling gdy upload się
+  // zdezaktualizował (np. user wgrał nowy plik zanim tamten skończył)
   async waitForJob(
     id: number,
     {

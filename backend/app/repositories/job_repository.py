@@ -10,8 +10,6 @@ from app.db.models import CleaningJob, JobStatus
 
 
 class JobRepository:
-    """Persistence for :class:`CleaningJob`. No business logic."""
-
     def __init__(self, session: Session) -> None:
         self._session = session
 
@@ -41,9 +39,8 @@ class JobRepository:
         )
         return result.rowcount == 1
 
-    # Sequence (not list) because the `list` method above shadows the builtin.
+    # Sequence zamiast list bo metoda list() wyżej przysłania wbudowany typ
     def list_unfinished(self) -> Sequence[CleaningJob]:
-        """Jobs still in a non-terminal status (pending or running)."""
         stmt = select(CleaningJob).where(
             CleaningJob.status.in_([JobStatus.pending, JobStatus.running])
         )

@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 
 
 def execute_job(job_id: int) -> None:
-    """Background entry point. Owns its session, so it also works from a queue worker."""
+    # własna sesja, żeby działało zarówno z BackgroundTasks jak i z workera kolejki
     from app.db.session import SessionLocal
 
     session = SessionLocal()
@@ -36,8 +36,6 @@ def execute_job(job_id: int) -> None:
 
 
 class CleaningService:
-    """Creates and runs cleaning jobs, persisting results and reports."""
-
     def __init__(self, session: Session, settings: Settings | None = None) -> None:
         self._session = session
         self._settings = settings or get_settings()
@@ -50,12 +48,12 @@ class CleaningService:
         return [OperationInfo.model_validate(spec) for spec in registry.describe()]
 
     def create(self, payload: CleaningJobCreate) -> CleaningJob:
-        """Create a pending job. The actual work happens in run()."""
+        """Tworzy job w stanie pending — faktyczne czyszczenie odpala run()."""
         dataset = self._datasets.get(payload.dataset_id)
         if dataset is None:
             raise NotFoundError(f"Dataset {payload.dataset_id} not found")
 
-        # reject unknown operations here (400) rather than as a failed job
+        # lepiej odrzucić tu (400) niż pozwolić jobowi failować z błędem operacji
         for step in payload.operations:
             registry.get(step.operation)
 
@@ -74,9 +72,9 @@ class CleaningService:
         return job
 
     def run(self, job_id: int) -> CleaningJob:
-        """Execute a pending job: pending -> running -> completed/failed."""
+        """pending → running → completed/failed"""
         job = self.get(job_id)
-        # conditional UPDATE, only one caller wins the claim
+        # atomowy UPDATE — przy wielu procesach tylko jeden caller to dostaje
         if not self._jobs.claim_pending(job_id):
             self._session.rollback()
             self._session.refresh(job)
@@ -109,8 +107,7 @@ class CleaningService:
 
         result_path = self._settings.result_dir / f"job_{job.id}_{uuid.uuid4().hex}.csv"
         writers.write_file(outcome.df, result_path, "csv")
-        # cache the preview next to the result; best effort, the preview
-        # endpoint falls back to reading the csv anyway
+        # sidecar z podglądem — jeśli zapis się nie uda, endpoint wczyta CSV
         try:
             metadata.write_meta(
                 result_path,

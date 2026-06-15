@@ -17,6 +17,7 @@ import {
   SmartSuggestionsError,
   SmartSuggestionsLoading,
 } from "./components/SmartSuggestions";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { EmptyResultPanel, ErrorPanel } from "./components/StatePanels";
 import { TrustBadges } from "./components/TrustBadges";
 import { Download, Sparkles } from "./components/icons";
@@ -43,7 +44,6 @@ const fadeUp = {
   transition: { duration: 0.35, ease },
 };
 
-// soft spring for the upload card layout animation
 const uploadLayoutTransition = {
   type: "spring",
   stiffness: 120,
@@ -51,8 +51,7 @@ const uploadLayoutTransition = {
   mass: 1,
 } as const;
 
-// shared layoutId between landing and header; instant opacity so the
-// crossfade never shows the empty state mid-flight
+// opacity stays at 1 during the shared-layout crossfade — bez tego widać mignięcie pustego stanu
 const uploadDockMotion = {
   initial: { opacity: 1 },
   animate: { opacity: 1 },
@@ -66,7 +65,7 @@ const EMPTY_MANUAL_ENABLED: Record<string, boolean> = Object.fromEntries(
   PRESETS.map((p) => [p.key, false]),
 );
 
-// lazy-loaded so the landing page doesn't pay for workspace components
+// workspace components ładujemy leniwie — landing nie płaci za ich bundle
 const DataPreviewTable = lazy(() =>
   import("./components/DataPreviewTable").then((mod) => ({
     default: mod.DataPreviewTable,
@@ -93,8 +92,8 @@ export default function App() {
   const pendingActionPanelScrollRef = useRef(false);
   const uploadPanelRef = useRef<HTMLElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  // stale-request guards: bumped on new upload/cleaning, checked before
-  // committing async results so old responses never overwrite newer state
+  // tokeny do odrzucania spóźnionych odpowiedzi — nowy upload/cleaning
+  // inkrementuje token, a handler sprawdza czy jest nadal aktualny
   const uploadTokenRef = useRef(0);
   const cleaningTokenRef = useRef(0);
   const cleaningInFlightRef = useRef(false);
@@ -233,7 +232,7 @@ export default function App() {
 
   async function handleUpload(file: File) {
     const token = ++uploadTokenRef.current;
-    cleaningTokenRef.current += 1; // invalidate any in-flight cleaning run
+    cleaningTokenRef.current += 1; // unieważnia trwające czyszczenie
     cleaningInFlightRef.current = false;
     const isCurrent = () => uploadTokenRef.current === token;
 
@@ -246,12 +245,12 @@ export default function App() {
     setEnabled(EMPTY_MANUAL_ENABLED);
     setSmartOpen(true);
     setManualOpen(false);
-    // reset cleaning flags since the invalidated run won't clean up
+    // unieważniony run nie wywoła finally, więc czyścimy flagi ręcznie
     setCleaning(false);
     setCleaningLabels([]);
     resetInsights();
     resetResults();
-    // preload workspace chunks while the upload is in flight
+    // czas uploadu to dobry moment na prefetch workspace — user i tak czeka
     void import("./components/DataPreviewTable");
     void import("./components/ResultSummary");
     try {
@@ -335,7 +334,6 @@ export default function App() {
     setError(null);
     resetResults();
     try {
-      // create, then poll until terminal
       const created = await api.createJob(dataset.id, steps);
       if (!isCurrent()) return;
       const finished = await api.waitForJob(created.id, {
@@ -557,6 +555,7 @@ export default function App() {
             </m.div>
           ) : (
             <m.div {...fadeUp} key="workspace" className="space-y-8">
+            <ErrorBoundary>
               {/* File summary */}
               <AnimatePresence>
                 {stats && (
@@ -755,6 +754,9 @@ export default function App() {
                                 : "Podgląd danych"
                             }
                             tone={successfulClean ? "clean" : "neutral"}
+                            comparePreview={
+                              successfulClean ? rawPreview : null
+                            }
                           />
                         </Suspense>
                       </m.div>
@@ -762,6 +764,7 @@ export default function App() {
                   </AnimatePresence>
                 </div>
               </div>
+            </ErrorBoundary>
             </m.div>
           )}
         </AnimatePresence>

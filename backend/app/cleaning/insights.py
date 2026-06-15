@@ -9,10 +9,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-# a fix is one or more pipeline steps ({operation, params})
 Step = dict[str, Any]
 
-# detection thresholds
+# progi wykrywania — zmień jeśli chcesz bardziej/mniej agresywne sugestie
 _MISSING_FLAG_PCT = 30.0  # flag column at this % missing
 _MISSING_DROP_PCT = 60.0  # suggest dropping column at this %
 _NUMERIC_PARSE_RATIO = 0.9  # min share of parseable numeric values
@@ -22,8 +21,6 @@ _CLEAN_NAME = re.compile(r"^[a-z0-9_]+$")
 
 @dataclass(frozen=True)
 class Issue:
-    """One detected problem with a recommended fix."""
-
     code: str
     title: str
     detail: str
@@ -55,7 +52,6 @@ class _Collector:
 
 
 def analyze(df: pd.DataFrame) -> list[Issue]:
-    """Scan for quality issues and return concrete fixes."""
     out = _Collector()
     if df.empty:
         return []
@@ -69,7 +65,6 @@ def analyze(df: pd.DataFrame) -> list[Issue]:
     return out.issues
 
 
-# --- detectors ---
 def _detect_duplicates(df: pd.DataFrame, out: _Collector) -> None:
     dupes = int(df.duplicated().sum())
     if dupes == 0:

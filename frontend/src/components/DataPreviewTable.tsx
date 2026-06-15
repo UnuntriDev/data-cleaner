@@ -2,62 +2,27 @@ import { m } from "framer-motion";
 import { useMemo, useState } from "react";
 import type { DataPreview } from "../types";
 import { useScrollAffordance } from "../hooks/useScrollAffordance";
+import {
+  type CellIssue,
+  type DiffInfo,
+  classifyCell,
+  computeDiff,
+  computeQualityCounts,
+  EMPTY_CELL,
+  findDuplicateRowKeys,
+  renderCell,
+  rowKey,
+  sameColumns,
+} from "../lib/preview";
 import { Columns, Rows, Search } from "./icons";
 
 interface DataPreviewTableProps {
   preview: DataPreview;
   title?: string;
   tone?: "neutral" | "clean";
-}
-
-type CellIssue = "empty" | "duplicate" | "invalid";
-
-function renderCell(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  if (typeof value === "boolean") return value ? "true" : "false";
-  return String(value);
-}
-
-function rowKey(row: Record<string, unknown>, columns: string[]): string {
-  return JSON.stringify(columns.map((c) => row[c] ?? null));
-}
-
-function looksInvalid(column: string, value: string): boolean {
-  if (value === "—") return false;
-
-  const normalizedColumn = column.toLowerCase();
-  const trimmed = value.trim();
-  const isEmail = /e-?mail/.test(normalizedColumn);
-  const isNumeric =
-    /(amount|total|price|qty|quantity|kwota|cena|pln|ilość|ilosc)/.test(
-      normalizedColumn,
-    );
-
-  if (isEmail && trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-    return true;
-  }
-
-  if (/invalid|błęd|blad|error/i.test(trimmed)) {
-    return true;
-  }
-
-  if (isNumeric) {
-    const normalizedNumber = trimmed.replace(/\s/g, "").replace(",", ".");
-    return normalizedNumber !== "" && Number.isNaN(Number(normalizedNumber));
-  }
-
-  return false;
-}
-
-function classifyCell(
-  column: string,
-  value: string,
-  duplicateRow: boolean,
-): CellIssue | null {
-  if (value === "—") return "empty";
-  if (looksInvalid(column, value)) return "invalid";
-  if (duplicateRow) return "duplicate";
-  return null;
+  /** Source preview shown next to a cleaned one. When set, the table
+   *  highlights cells that changed between source and cleaned. */
+  comparePreview?: DataPreview | null;
 }
 
 const issueClasses: Record<CellIssue, string> = {
@@ -70,55 +35,44 @@ export function DataPreviewTable({
   preview,
   title = "Podgląd danych",
   tone = "neutral",
+  comparePreview = null,
 }: DataPreviewTableProps) {
   const { columns, rows, total_rows } = preview;
   const [query, setQuery] = useState("");
+  const [showDiff, setShowDiff] = useState(true);
   const showQualityHints = tone === "neutral";
+
+  const diff = useMemo<DiffInfo | null>(() => {
+    // require identical column shape — otherwise alignment is meaningless
+    if (!comparePreview || !sameColumns(comparePreview.columns, columns)) {
+      return null;
+    }
+    return computeDiff(comparePreview.rows, rows, columns);
+  }, [columns, rows, comparePreview]);
+
+  const diffActive = !!diff && showDiff;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((row) =>
+    const indexed = rows.map((row, idx) => ({ row, idx }));
+    if (!q) return indexed;
+    return indexed.filter(({ row }) =>
       columns.some((c) => renderCell(row[c]).toLowerCase().includes(q)),
     );
   }, [query, rows, columns]);
 
-  const duplicateRows = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const row of rows) {
-      const key = rowKey(row, columns);
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return new Set(
-      [...counts.entries()]
-        .filter(([, count]) => count > 1)
-        .map(([key]) => key),
-    );
-  }, [rows, columns]);
+  const duplicateRows = useMemo(
+    () => findDuplicateRowKeys(rows, columns),
+    [rows, columns],
+  );
 
-  const qualityCounts = useMemo(() => {
-    const counts: Record<CellIssue, number> = {
-      empty: 0,
-      duplicate: 0,
-      invalid: 0,
-    };
-
-    if (!showQualityHints) return counts;
-
-    for (const row of rows) {
-      const duplicateRow = duplicateRows.has(rowKey(row, columns));
-      for (const column of columns) {
-        const issue = classifyCell(
-          column,
-          renderCell(row[column]),
-          duplicateRow,
-        );
-        if (issue) counts[issue] += 1;
-      }
-    }
-
-    return counts;
-  }, [columns, duplicateRows, rows, showQualityHints]);
+  const qualityCounts = useMemo(
+    () =>
+      showQualityHints
+        ? computeQualityCounts(rows, columns, duplicateRows)
+        : { empty: 0, duplicate: 0, invalid: 0 },
+    [columns, duplicateRows, rows, showQualityHints],
+  );
 
   const accent = tone === "clean" ? "text-emerald-600" : "text-coral-500";
 
@@ -143,14 +97,43 @@ export function DataPreviewTable({
           </span>
         </div>
 
-        <div className="relative sm:w-56">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Szukaj w danych..."
-            className="w-full rounded-xl border border-sand-300 bg-white/80 py-2 pl-9 pr-3 text-sm text-ink-800 placeholder:text-ink-400 outline-none transition-colors focus:border-coral-400 focus:ring-2 focus:ring-coral-100"
-          />
+        <div className="flex items-center gap-2.5">
+          {diff && diff.changedCells > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowDiff((v) => !v)}
+              aria-pressed={showDiff}
+              className={[
+                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-colors",
+                showDiff
+                  ? "bg-emerald-500 text-white ring-emerald-500 hover:bg-emerald-600"
+                  : "bg-white/70 text-ink-600 ring-sand-300 hover:text-emerald-700 hover:ring-emerald-200",
+              ].join(" ")}
+              title={
+                showDiff
+                  ? "Ukryj podświetlenie zmienionych komórek"
+                  : "Pokaż zmienione komórki"
+              }
+            >
+              <span
+                aria-hidden
+                className={[
+                  "h-1.5 w-1.5 rounded-full",
+                  showDiff ? "bg-white" : "bg-emerald-500",
+                ].join(" ")}
+              />
+              {showDiff ? "Zmiany widoczne" : "Pokaż zmiany"}
+            </button>
+          )}
+          <div className="relative sm:w-56">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Szukaj w danych..."
+              className="w-full rounded-xl border border-sand-300 bg-white/80 py-2 pl-9 pr-3 text-sm text-ink-800 placeholder:text-ink-400 outline-none transition-colors focus:border-coral-400 focus:ring-2 focus:ring-coral-100"
+            />
+          </div>
         </div>
       </div>
 
@@ -174,12 +157,13 @@ export function DataPreviewTable({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row, i) => {
+              {filtered.map(({ row, idx }, i) => {
                 const duplicateRow =
                   showQualityHints && duplicateRows.has(rowKey(row, columns));
+                const rowDiff = diffActive ? diff?.changes.get(idx) : undefined;
                 return (
                   <m.tr
-                    key={i}
+                    key={idx}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
@@ -193,23 +177,42 @@ export function DataPreviewTable({
                   >
                     {columns.map((c) => {
                       const value = renderCell(row[c]);
-                      const empty = value === "—";
+                      const empty = value === EMPTY_CELL;
                       const issue = showQualityHints
                         ? classifyCell(c, value, duplicateRow)
                         : null;
+                      const changedFrom = rowDiff?.get(c);
+                      const isChanged = changedFrom !== undefined;
                       return (
                         <td
                           key={c}
+                          title={
+                            isChanged
+                              ? `Wcześniej: ${changedFrom}`
+                              : undefined
+                          }
                           className={[
                             "whitespace-nowrap px-4 py-3.5 tabular-nums",
-                            issue
-                              ? issueClasses[issue]
-                              : empty
-                                ? "italic text-ink-400"
-                                : "text-ink-700",
+                            isChanged
+                              ? "bg-emerald-50/80 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200"
+                              : issue
+                                ? issueClasses[issue]
+                                : empty
+                                  ? "italic text-ink-400"
+                                  : "text-ink-700",
                           ].join(" ")}
                         >
-                          {value}
+                          {isChanged ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span
+                                aria-hidden
+                                className="h-1.5 w-1.5 rounded-full bg-emerald-500"
+                              />
+                              {value}
+                            </span>
+                          ) : (
+                            value
+                          )}
                         </td>
                       );
                     })}
@@ -273,6 +276,26 @@ export function DataPreviewTable({
               value={qualityCounts.invalid}
               tone="invalid"
             />
+          </span>
+        )}
+        {diff && (diff.changedCells > 0 || diff.removedRows > 0) && (
+          <span className="flex flex-wrap gap-1.5">
+            {diff.changedCells > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                <span className="tabular-nums">
+                  {diff.changedCells.toLocaleString("pl-PL")}
+                </span>
+                naprawione
+              </span>
+            )}
+            {diff.removedRows > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-coral-50 px-2 py-1 font-semibold text-coral-700 ring-1 ring-coral-100">
+                <span className="tabular-nums">
+                  {diff.removedRows.toLocaleString("pl-PL")}
+                </span>
+                wierszy usuniętych
+              </span>
+            )}
           </span>
         )}
       </div>

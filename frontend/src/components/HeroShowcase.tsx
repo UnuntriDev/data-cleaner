@@ -6,13 +6,6 @@ import {
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Check, Copy, Pointer, Wand } from "./icons";
 
-/**
- * Animated "before / after" hero showcase. A dirty table on the left is
- * resolved problem-by-problem: an auto-cursor moves to each issue, a tooltip
- * suggests a fix, then the matching clean value pops in on the right. Loops
- * every ~7s. Honors prefers-reduced-motion (renders the solved end state).
- */
-
 type ProblemKind = "duplicate" | "missing" | "type";
 
 interface Row {
@@ -116,7 +109,6 @@ export function HeroShowcase() {
       transition={{ type: "spring", stiffness: 150, damping: 22 }}
       className="glass-strong relative overflow-hidden rounded-3xl shadow-lift ring-1 ring-white/60"
     >
-      {/* window chrome */}
       <div className="flex items-center gap-3 border-b border-sand-300/60 px-5 py-3.5">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-coral-200" />
@@ -124,14 +116,9 @@ export function HeroShowcase() {
           <span className="h-2.5 w-2.5 rounded-full bg-sand-300" />
         </span>
         <span className="text-sm font-medium text-ink-500">klienci-demo.csv</span>
-        <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-coral-50 px-2.5 py-1 text-xs font-semibold text-coral-700 ring-1 ring-coral-100">
-          <Wand className="h-3.5 w-3.5" />
-          Smart Fix
-        </span>
       </div>
 
       <div className="grid gap-px bg-sand-300/40 sm:grid-cols-2">
-        {/* BEFORE */}
         <div ref={leftRef} className="relative bg-cream-50/40 p-4">
           <PanelLabel tone="bad">Przed</PanelLabel>
           <div className="mt-3 space-y-1.5">
@@ -165,7 +152,7 @@ export function HeroShowcase() {
                   >
                     {row.kwota}
                   </span>
-                  {/* status cell (cursor target) */}
+                  {/* cel, do którego przelatuje kursor */}
                   <div
                     ref={(el) => {
                       cellRefs.current[i] = el;
@@ -187,7 +174,6 @@ export function HeroShowcase() {
             })}
           </div>
 
-          {/* auto-cursor + tooltip */}
           {!reduce && (
             <m.div
               className="pointer-events-none absolute left-0 top-0 z-20"
@@ -216,7 +202,6 @@ export function HeroShowcase() {
           )}
         </div>
 
-        {/* AFTER */}
         <div className="relative bg-emerald-50/30 p-4">
           <PanelLabel tone="good">Po</PanelLabel>
           <div className="mt-3 space-y-1.5">
@@ -269,7 +254,6 @@ export function HeroShowcase() {
         </div>
       </div>
 
-      {/* footer summary */}
       <div className="flex items-center gap-2 border-t border-sand-300/60 px-5 py-3 text-xs text-ink-500">
         <Copy className="h-3.5 w-3.5 text-coral-500" />
         <span>1 duplikat, 1 brak, 1 błędny typ</span>

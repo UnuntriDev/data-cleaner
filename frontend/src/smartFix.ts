@@ -1,9 +1,7 @@
 import type { Insight, OperationStep } from "./types";
 
-/**
- * Execution order. clean_column_names is last (90) because earlier steps
- * reference original column names.
- */
+// clean_column_names musi być ostatnie — wcześniejsze kroki odnoszą się
+// do oryginalnych nazw kolumn, które ta operacja zmienia
 export const SMART_FIX_ORDER: Record<string, number> = {
   clean_text: 10,
   convert_types: 20,
@@ -13,7 +11,6 @@ export const SMART_FIX_ORDER: Record<string, number> = {
   clean_column_names: 90,
 };
 
-/** Deduplicate and sort selected insights into pipeline steps. */
 export function buildSmartFixSteps(insights: Insight[]): OperationStep[] {
   const deduped = new Map<string, OperationStep>();
 

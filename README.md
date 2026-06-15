@@ -19,6 +19,8 @@ cleaned result and download it (CSV / Excel / JSON).
 - **Smart Fix** — duplicates, messy column names, stray whitespace, numbers
   stored as text, high-missing columns and outliers are detected on upload,
   each with a one-click recommended fix
+- **Diff view** — after cleaning, changed cells are highlighted green with a
+  tooltip showing the original value; a toggle lets you compare before/after
 - **Async cleaning jobs** — `202 Accepted` + status polling; atomic job
   claiming, crash recovery on startup, per-job reports with before/after metrics
 - **Parse once, serve many** — preview, stats and insights are computed during
@@ -26,7 +28,7 @@ cleaned result and download it (CSV / Excel / JSON).
 - **Production-minded** — streamed uploads with size/extension limits,
   formula-injection-safe exports, env-driven CORS, request-id tracing,
   SSRF-gated SQL import
-- **Quality gates** — 49 tests (pytest + vitest), ruff, mypy and a type-checked
+- **Quality gates** — 60 tests (pytest + vitest), ruff, mypy and a type-checked
   build wired into GitHub Actions
 
 | Detected issues & data preview | Cleaning result |

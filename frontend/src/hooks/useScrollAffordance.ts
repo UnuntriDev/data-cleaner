@@ -1,21 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface ScrollAffordance {
-  /** There is hidden content to the left (scrolled away from the start). */
   canScrollLeft: boolean;
-  /** There is hidden content to the right (not yet at the end). */
   canScrollRight: boolean;
 }
 
-/**
- * Tracks horizontal overflow state of a scroll container so the UI can show
- * fade hints on the edges that still have hidden content. This is the
- * "scroll shadow" / "scroll affordance" pattern.
- *
- * Returns a ref to attach to the scrollable element plus the current state.
- * Recomputes on scroll, on resize of the element, and whenever `deps` change
- * (e.g. the data/columns rendered inside).
- */
+// deps trzeba przekazać gdy zawartość kontenera zmienia rozmiar bez zmiany
+// samego elementu (np. nowe kolumny) — ResizeObserver tego nie wyłapie
 export function useScrollAffordance<T extends HTMLElement>(
   deps: ReadonlyArray<unknown> = [],
 ): { ref: React.RefObject<T>; affordance: ScrollAffordance } {
@@ -29,15 +20,15 @@ export function useScrollAffordance<T extends HTMLElement>(
     const el = ref.current;
     if (!el) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
-    // 1px tolerance: sub-pixel layout rounding can leave scrollLeft at e.g.
-    // 0.5 at the true end, which would otherwise keep the fade showing.
+    // 1px margines na subpikselowe zaokrąglenia — bez tego cień zostaje
+    // widoczny gdy scrollLeft wynosi np. 0.5 zamiast dokładnego 0
     const maxScroll = scrollWidth - clientWidth;
     const next: ScrollAffordance = {
       canScrollLeft: scrollLeft > 1,
       canScrollRight: scrollLeft < maxScroll - 1,
     };
-    // Skip the state update (and re-render) when nothing changed — scroll
-    // fires on every pixel, but the booleans only flip at the edges.
+    // scroll odpala się na każdy piksel — aktualizujemy stan tylko gdy
+    // faktycznie zmienia się który cień jest widoczny
     setAffordance((prev) =>
       prev.canScrollLeft === next.canScrollLeft &&
       prev.canScrollRight === next.canScrollRight
@@ -53,8 +44,6 @@ export function useScrollAffordance<T extends HTMLElement>(
     measure();
 
     el.addEventListener("scroll", measure, { passive: true });
-    // ResizeObserver catches container resizes (window resize, sidebar toggles,
-    // font load) without a global resize listener.
     const observer = new ResizeObserver(measure);
     observer.observe(el);
 

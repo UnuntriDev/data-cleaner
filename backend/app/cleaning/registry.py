@@ -33,8 +33,6 @@ class OperationSpec:
 
 
 class OperationRegistry:
-    """All cleaning operations, keyed by name."""
-
     def __init__(self, operations: list[type[CleaningOperation]]) -> None:
         self._operations: dict[str, CleaningOperation] = {}
         for op_cls in operations:
@@ -47,7 +45,6 @@ class OperationRegistry:
             raise ValueError(f"Unknown operation: {name}") from exc
 
     def describe(self) -> list[OperationSpec]:
-        """List operations with their param specs (used by the UI)."""
         specs: list[OperationSpec] = []
         for op in self._operations.values():
             params = [
