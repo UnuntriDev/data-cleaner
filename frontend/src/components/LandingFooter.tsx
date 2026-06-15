@@ -5,7 +5,6 @@ interface LandingFooterProps {
 }
 
 const LINKS = [
-  { label: "Funkcje", href: "#features" },
   { label: "Workflow", href: "#workflow" },
 ];
 

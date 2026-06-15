@@ -9,17 +9,17 @@ import { Check, Sparkles, Wand } from "./icons";
  */
 
 interface DemoRow {
-  klient: string;
+  email: string;
   dirty: string;
   clean: string;
-  removed?: boolean; // duplicate row, dropped on clean
+  removed?: boolean;
 }
 
 const DEMO: DemoRow[] = [
-  { klient: "Anna Kowalska", dirty: "1 200", clean: "1 200" },
-  { klient: "Maria Wiśniewska", dirty: "—", clean: "1 480" },
-  { klient: "Ewa Zając", dirty: "1 750", clean: "1 750", removed: true },
-  { klient: "Magda Dąbrowska", dirty: "abc", clean: "2 300" },
+  { email: "john.smith @email.com", dirty: "john.smith @email.com", clean: "john.smith@email.com" },
+  { email: "anna.weber", dirty: "anna.weber", clean: "anna.weber@company.de" },
+  { email: "bob@test", dirty: "bob@test", clean: "bob@test.org", removed: true },
+  { email: "carol_green CAROL_GREEN", dirty: "carol_green CAROL_GREEN", clean: "carol.green@corp.io" },
 ];
 
 export function BentoSmartFix() {
@@ -64,7 +64,7 @@ export function BentoSmartFix() {
           const isProblem = row.dirty !== row.clean || row.removed;
           return (
             <div
-              key={row.klient}
+              key={row.email}
               className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm"
             >
               <span
@@ -73,7 +73,7 @@ export function BentoSmartFix() {
                   gone ? "text-ink-400 line-through" : "text-ink-700",
                 ].join(" ")}
               >
-                {row.klient}
+                {row.email}
               </span>
               <span className="w-16 text-right tabular-nums">
                 <AnimatePresence mode="wait" initial={false}>

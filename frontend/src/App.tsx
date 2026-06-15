@@ -8,7 +8,7 @@ import { FileUploadCard } from "./components/FileUploadCard";
 import { Hero } from "./components/Hero";
 import { LandingFooter } from "./components/LandingFooter";
 import { LandingNav } from "./components/LandingNav";
-import { LandingFeatures, LandingWorkflow } from "./components/LandingSections";
+import { LandingWorkflow } from "./components/LandingSections";
 import { PrimaryButton } from "./components/PrimaryButton";
 import { HeroShowcase } from "./components/HeroShowcase";
 import {
@@ -513,7 +513,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: { duration: 0 } }}
-              className="space-y-24 sm:space-y-32"
+              className="space-y-16 sm:space-y-24"
             >
               <div className="relative grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
                 <div className="aurora" />
@@ -553,7 +553,6 @@ export default function App() {
               </div>
 
               <LandingWorkflow onUpload={openFilePicker} onDemo={loadDemo} />
-              <LandingFeatures />
               <LandingFooter onOpenApp={scrollToApp} />
             </m.div>
           ) : (

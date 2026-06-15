@@ -88,7 +88,7 @@ export function ProcessStepper({ currentStep }: ProcessStepperProps) {
                 </span>
 
                 <div className="min-w-0 pt-1 md:pt-4">
-                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-coral-500">
+                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-coral-700">
                     Krok {step.id}
                   </p>
                   <h3

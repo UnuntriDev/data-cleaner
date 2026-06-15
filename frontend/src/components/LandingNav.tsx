@@ -6,7 +6,6 @@ interface LandingNavProps {
 }
 
 const LINKS = [
-  { label: "Funkcje", href: "#features" },
   { label: "Workflow", href: "#workflow" },
 ];
 
